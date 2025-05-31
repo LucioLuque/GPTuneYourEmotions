@@ -5,4 +5,3 @@
 *.npy
 
 # Ignorar archivos BAT (Windows batch)
-*.bat
