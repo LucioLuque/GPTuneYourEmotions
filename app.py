@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from model import generate_reflection, generate_recommendation
+from backend_factory import generate_reflection, generate_recommendation
 from emotions import detect_user_emotions
 from song import get_song
 
