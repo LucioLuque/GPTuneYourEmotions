@@ -4,4 +4,5 @@
 # Ignorar archivos NPY (NumPy)
 *.npy
 
-# Ignorar archivos BAT (Windows batch)
+# Ignorar credenciales de Windows
+credentials.bat
