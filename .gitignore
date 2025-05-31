@@ -1,0 +1,8 @@
+# Ignorar archivos CSV
+*.csv
+
+# Ignorar archivos NPY (NumPy)
+*.npy
+
+# Ignorar archivos BAT (Windows batch)
+# *.bat

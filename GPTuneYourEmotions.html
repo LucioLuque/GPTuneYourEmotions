@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPTune your emotions</title>
-  <link rel="preload" href="loginlogo2.png" as="image" />
+  <link rel="preload" href="loginlogo.png" as="image" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
   <style>
     * {
@@ -226,14 +226,13 @@
     <span>GPTune your emotions</span>
     <button id="resetButton" onclick="resetChat()">Reset</button>
     <div class="login-wrapper">
-      <img id="profileIcon" class="icon-button" src="loginlogo2.png" alt="Perfil" onclick="toggleLoginMenu()" />
+      <img id="profileIcon" class="icon-button" src="loginlogo.png" alt="Perfil" onclick="toggleLoginMenu()" />
       <div id="loginMenu" class="login-menu hidden">
         <button onclick="login()">Login</button>
         <button onclick="logout()">Logout</button>
       </div>
     </div>
   </header>
-
 
   <div class="chat-container" id="chat">
   </div>
@@ -292,7 +291,7 @@
       profileIcon.style.boxShadow       = "0 0 10px #1DB954, 0 0 20px #1DB95455";
     } else {
       // Icono por defecto → glow sólo si está habilitado
-      profileIcon.src                   = "loginlogo2.png";
+      profileIcon.src                   = "loginlogo.png";
       profileIcon.alt                   = "Icono por defecto";
       profileIcon.style.objectFit       = "contain";
       profileIcon.style.padding         = "4px";
@@ -326,7 +325,26 @@
   function appendMessage(text, sender, emotions = []) {
     const msg = document.createElement('div');
     msg.className = `message ${sender}`;
-    msg.textContent = text;
+
+    // Expresión regular simple para detectar si el string es un enlace Spotify
+    const urlRegex = /^https?:\/\/.+$/i;
+
+    if (urlRegex.test(text)) {
+      // Si text coincide con URL, creamos un <a> clickeable
+      const link = document.createElement('a');
+      link.href = text;
+      link.textContent = text;
+      link.target = "_blank";           // abre en nueva pestaña
+      link.rel = "noopener noreferrer"; // buenas prácticas de seguridad
+      link.style.color = "#1DB954";     // opcional: color similar a tu diseño
+      link.style.textDecoration = "underline";
+      msg.appendChild(link);
+    } else {
+      // Si no es URL, lo mostramos como texto puro
+      msg.textContent = text;
+    }
+    
+    // msg.textContent = text;
     chat.appendChild(msg);
 
     if (sender === 'user' && Array.isArray(emotions) && emotions.length) {
@@ -370,74 +388,92 @@
   }
 
   async function sendMessage() {
-    if (botResponses >= 2) return;
-    const userText = input.value.trim();
-    if (!userText) return;
+  if (botResponses >= 2) return;
+  const userText = input.value.trim();
+  if (!userText) return;
 
-    if (botResponses === 0) {
-      loginAllowed = false;
-      updateProfileIcon();
-      updateLoginMenu();
-    }
+  if (botResponses === 0) {
+    loginAllowed = false;
+    updateProfileIcon();
+    updateLoginMenu();
+  }
 
-    if (countWords(userText) > 150) {
-      alert("Please limit your message to 150 words.");
-      return;
-    }
-    if (userText.length > 800) {
-      alert("Please limit your message to 800 characters.");
-      return;
-    }
+  if (countWords(userText) > 150) {
+    alert("Please limit your message to 150 words.");
+    return;
+  }
+  if (userText.length > 800) {
+    alert("Please limit your message to 800 characters.");
+    return;
+  }
 
-    const { emotion, embedding } = await detectEmotion(userText);
-    appendMessage(userText, 'user', Array.isArray(emotion) ? emotion : [emotion]);
-    showTypingIndicator();
+  const { emotion, embedding } = await detectEmotion(userText);
+  appendMessage(userText, 'user', Array.isArray(emotion) ? emotion : [emotion]);
+  showTypingIndicator();
 
-    input.value = '';
-    sendButton.disabled = true;
-    input.disabled = true;
+  input.value = '';
+  sendButton.disabled = true;
+  input.disabled = true;
 
-    let response;
-    if (botResponses === 0) {
-      firstUserMessage  = userText;
-      emotionDetected1  = emotion;
-      emotionEmbedding1 = embedding;
-      response          = await callLLMReflect(userText);
-      firstBotResponse  = response;
-    } else {
-      secondUserMessage = userText;
-      emotionDetected2  = emotion;
-      emotionEmbedding2 = embedding;
+  let response;
 
+  // —————— Primera iteración ——————
+  if (botResponses === 0) {
+    firstUserMessage   = userText;
+    emotionDetected1   = emotion;
+    emotionEmbedding1  = embedding;
 
+    response         = await callLLMReflect(userText);
+    firstBotResponse = response;
 
-      const payload = {
-        user_input_1: firstUserMessage,
-        user_input_2: secondUserMessage,
-        bot_response_1: firstBotResponse,
-        emotion_detected_1: emotionDetected1,
-        emotion_detected_2: emotionDetected2,
-        emotional_embedding_1: emotionEmbedding1,
-        emotional_embedding_2: emotionEmbedding2,
-        genres
-      };
-      response = await callLLMRecommend(payload);
-    }
-
+    // **Desplegar YA la respuesta** (quitamos “thinking”)
     removeTypingIndicator();
     appendMessage(response, 'bot');
-    botResponses++;
 
-    if (botResponses < 2) {
-      sendButton.disabled = false;
-      input.disabled = false;
-      input.focus();
-    } else {
-      sendButton.disabled = true;
-      input.disabled = true;
-      resetButton.style.animation = "pulse-glow 2s infinite";
-    }
+    // Preparamos para segunda iteración
+    botResponses++;
+    sendButton.disabled = false;
+    input.disabled      = false;
+    input.focus();
+    return;
   }
+
+  // —————— Segunda iteración ——————
+  secondUserMessage   = userText;
+  emotionDetected2    = emotion;
+  emotionEmbedding2   = embedding;
+
+  const payload = {
+    user_input_1:          firstUserMessage,
+    user_input_2:          secondUserMessage,
+    bot_response_1:        firstBotResponse,
+    emotion_detected_1:    emotionDetected1,
+    emotion_detected_2:    emotionDetected2,
+    emotional_embedding_1: emotionEmbedding1,
+    emotional_embedding_2: emotionEmbedding2,
+    genres,
+    spotify_token: localStorage.getItem('spotify_token')
+  };
+
+  const recommendResult = await callLLMRecommend(payload);
+  response              = recommendResult.response;
+  urls = recommendResult.urls;
+
+  // **Quitamos “thinking” y mostramos YA la respuesta del LLM**:
+  removeTypingIndicator();
+  appendMessage(response, 'bot');
+  if (urls && urls.length > 0) {
+    urls.forEach(url => {
+      appendMessage(url, 'bot');
+    });
+  }
+
+  // **Marcamos fin de segunda iteración** y deshabilitamos input/botón
+  botResponses++;
+  sendButton.disabled = true;
+  input.disabled      = true;
+  resetButton.style.animation = "pulse-glow 2s infinite";
+}
 
   function resetChat() {
     loginAllowed = true;
@@ -479,7 +515,7 @@
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });
-    return (await res.json()).response;
+    return (await res.json());
   }
 
   // —————— Inicialización ——————
@@ -491,7 +527,7 @@
   document.getElementById('userInput').addEventListener('keydown', handleKey);
 </script>
 <script type="module">
-  import { login } from './auth.mjs';
+  import { login } from './auth.js';
 
   window.login = async () => {
     if (!loginAllowed) {
@@ -509,6 +545,7 @@
       return;
     }
     localStorage.removeItem("spotify_profile_img");
+    localStorage.removeItem("spotify_token");
     genres = [];
     updateProfileIcon();
     updateLoginMenu();

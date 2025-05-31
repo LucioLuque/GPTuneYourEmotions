@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from torch import no_grad
-import numpy
+import numpy as np
+import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -13,7 +14,10 @@ id2label = model.config.id2label
 neutral_idx = next(i for i,lbl in id2label.items() if lbl == "neutral")
 _mask = np.arange(len(id2label)) != neutral_idx
 
-# crea también el diccionario filtrado de etiquetas (índices renumerados)
+data_embeddings = np.load("all_embeddings.npy")
+df = pd.read_csv("dataset_with_embeddings.csv")
+data_ids = df["id"]
+
 filtered_labels = {
     new_i: id2label[old_i]
     for new_i, old_i in enumerate(np.where(_mask)[0])
@@ -87,12 +91,17 @@ def get_k_mid_points(emotional_embedding_1, emotional_embedding_2, k=2):
         mid_points.append(mid_point)
     return mid_points
 
-def get_playlist_ids(embedding_1, embedding_2, k=2, data_embeddings, data_ids):
+def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2):
     """
     Returns the IDs of the playlist songs that are closest to the k mid points between 
     two emotional embeddings.
     Default k=2 value returns the closest songs to the original inputs.
     """
+    #if embeddings are not numpy arrays, convert them
+    if not isinstance(embedding_1, np.ndarray):
+        embedding_1 = np.array(embedding_1)
+    if not isinstance(embedding_2, np.ndarray):
+        embedding_2 = np.array(embedding_2)
     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
     similarities = cosine_similarity(mid_points, data_embeddings)
     closest_idxs = np.argmax(similarities, axis=1)

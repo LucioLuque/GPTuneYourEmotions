@@ -26,7 +26,7 @@ import os, asyncio
 from emotions import detect_user_emotions  
 
 BACKEND = os.getenv("BOT_BACKEND", "flan").lower()   # flan | gpt4o
-
+print(f"[backend_factory] BOT_BACKEND = '{BACKEND}'")  # imprime "flan" o "gpt4o"
 #Importa las funciones de flan y de gpt-4o-mini y les pone un alias
 from model import (
     generate_reflection   as _flan_reflect,
@@ -65,7 +65,7 @@ if BACKEND == "gpt4o":
         ))
 
 else:
-    # ---------- Flan-T5 passthrough ------------------------------------------
+    # ---------- Flan-passthrough ------------------------------------------
     def generate_reflection(message: str):
         return _flan_reflect(message)
 

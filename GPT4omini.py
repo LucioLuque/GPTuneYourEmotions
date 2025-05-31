@@ -24,7 +24,7 @@ client = AsyncAzureOpenAI(
 )
 
 # ───────────────────────────────────
-# Cosa de seguridad que me tiró el chat
+# Seguridad
 # ───────────────────────────────────
 async def safe_chat_create(**kwargs):
     """
@@ -67,6 +67,7 @@ FEW_SHOT_RECOMMEND = [
         " • acknowledge the user's current emotion and desired emotion\n"
         " • respond in at least three supportive sentences\n"
         " • recommend ONE song in a meaningful way and explain why it fits."
+        # PARA MI DEBERIA TERMINAR DICIENDO 'you can listen the playlist here:' o algo asi
     )},
     {"role": "user", "content": "Everything feels out of control lately."},
     {"role": "assistant",

@@ -44,6 +44,7 @@ def generate_reflection(user_message, emo="sad"):
         top_p=0.9,
         pad_token_id=tokenizer.eos_token_id
     )
+
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
@@ -69,4 +70,5 @@ def generate_recommendation(user_input_1, user_input_2, bot_response_1, actual_e
         no_repeat_ngram_size=3,
         pad_token_id=tokenizer.eos_token_id
     )
+    
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
