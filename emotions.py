@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from torch import no_grad
-from numpy import mean, delete, arange, where
+import numpy
+from sklearn.metrics.pairwise import cosine_similarity
 
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
 model     = AutoModelForSequenceClassification.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -10,12 +11,12 @@ id2label = model.config.id2label
 
 
 neutral_idx = next(i for i,lbl in id2label.items() if lbl == "neutral")
-_mask = arange(len(id2label)) != neutral_idx
+_mask = np.arange(len(id2label)) != neutral_idx
 
 # crea también el diccionario filtrado de etiquetas (índices renumerados)
 filtered_labels = {
     new_i: id2label[old_i]
-    for new_i, old_i in enumerate(where(_mask)[0])
+    for new_i, old_i in enumerate(np.where(_mask)[0])
 }
 
 emotions_labels = list(filtered_labels.values())
@@ -54,7 +55,7 @@ def get_emotional_embedding_v1(text, model, tokenizer):
             logits = outputs.logits
             chunk_logits.append(logits.squeeze().numpy())
     
-    avg_logits = mean(chunk_logits, axis=0)
+    avg_logits = np.mean(chunk_logits, axis=0)
     return avg_logits
 
 def take_out_neutral_emotion(emotional_embedding):
@@ -75,7 +76,6 @@ def detect_user_emotions(user_input, n=1):
     top_emotion = format_top_emotions(emotional_embedding_2, labels_2, top_n=n)
     return emotional_embedding_2, top_emotion
 
-
 def get_k_mid_points(emotional_embedding_1, emotional_embedding_2, k=2):
     """
     Returns the k mid points of the emotional embedding.
@@ -86,4 +86,16 @@ def get_k_mid_points(emotional_embedding_1, emotional_embedding_2, k=2):
         mid_point = emotional_embedding_1 + ((i)/(k-1))* t
         mid_points.append(mid_point)
     return mid_points
+
+def get_playlist_ids(embedding_1, embedding_2, k=2, data_embeddings, data_ids):
+    """
+    Returns the IDs of the playlist songs that are closest to the k mid points between 
+    two emotional embeddings.
+    Default k=2 value returns the closest songs to the original inputs.
+    """
+    mid_points = get_k_mid_points(embedding_1, embedding_2, k)
+    similarities = cosine_similarity(mid_points, data_embeddings)
+    closest_idxs = np.argmax(similarities, axis=1)
+    closest_ids = [data_ids[idx] for idx in closest_idxs]
+    return closest_ids
     
