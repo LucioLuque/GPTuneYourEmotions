@@ -66,16 +66,17 @@ FEW_SHOT_RECOMMEND = [
         "In this turn you must:\n"
         " • acknowledge the user's current emotion and desired emotion\n"
         " • respond in at least three supportive sentences\n"
-        " • recommend ONE song in a meaningful way and explain why it fits."
-        # PARA MI DEBERIA TERMINAR DICIENDO 'you can listen the playlist here:' o algo asi
+        " • Respond that you will give the user a playlist that will help them transition from the current emotion to the desired emotion.\n"
+        " • Write that you can find the playlist link below with ':'.\n"
+        " • You MUST NOT add a link.\n"
     )},
     {"role": "user", "content": "Everything feels out of control lately."},
     {"role": "assistant",
      "content": (
         "I'm really sorry you're feeling overwhelmed. Remember that you're not "
         "alone and it's okay to take things one step at a time. "
-        "A song that might help is 'Fix You' by Coldplay; its gentle build and "
-        "hopeful lyrics can offer comfort and remind you that things can improve."
+        "I hope these songs help you feel better and support you in the process. "
+        "You can find the link to the Spotify playlist here:"
      )},
 ]
 
@@ -119,11 +120,12 @@ async def generate_recommendation(
          "content": (
              f"Current emotion: {current_emotion}\n"
              f"Desired emotion: {desired_emotion}\n"
-             f"Song to recommend: {song_title}"
-             f"IMPORTANT INSTRUCTION: You MUST recommend EXACTLY the song '{song_title}' - "
+             #f"Song to recommend: {song_title}"
+             #f"IMPORTANT INSTRUCTION: You MUST recommend EXACTLY the song '{song_title}' - "
+             f"Do not recommend any other song or artist, the link to the song is already provided. "
              f"do not substitute it with any other song or similar artist. "
-             f"The song selection is final and has been carefully chosen for this emotional transition. "
-             f"Explain why this specific song can help with the transition from {current_emotion} to {desired_emotion}."
+             f"The songs selection is final and has been carefully chosen for this emotional transition. "
+             #f"Explain why this specific song can help with the transition from {current_emotion} to {desired_emotion}."
         )}
     ]
     response = await safe_chat_create(
@@ -136,3 +138,21 @@ async def generate_recommendation(
     )
     return response.choices[0].message.content.strip()
 
+
+
+async def generate_translation(user_message: str) -> str:
+    prompt = (
+        "Please translate the following user message to English, preserving especially the emotional meaning:\n\n"
+        f"{user_message}\n\n"
+        "Translate literally, but also ensure that the emotional tone and nuances are maintained."
+        "Respond ONLY with the translated text. Do not add explanations."
+    )
+
+    messages = [{"role": "user", "content": prompt}]
+    response = await safe_chat_create(
+        model=DEPLOYMENT,
+        messages=messages,
+        temperature=0.0,
+        max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()

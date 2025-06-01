@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from backend_factory import generate_reflection, generate_recommendation
+from GPT4omini import generate_translation
 from emotions import detect_user_emotions, get_playlist_ids
 from urllib import request as urllib_request
 import json
+import asyncio
+import os
+
+BACKEND = os.getenv("BOT_BACKEND", "flan").lower()
 
 app = Flask(__name__)
 CORS(app)
@@ -75,7 +80,14 @@ def detect_emotion():
     try:
         data = request.get_json(force=True)
         message = data.get("message", "")
-        emotional_embedding, emotions = detect_user_emotions(message, n=3)
+        
+        if BACKEND == "gpt4o":
+            translated_message = asyncio.run(generate_translation(message))
+        else:
+            translated_message = message
+
+        emotional_embedding, emotions = detect_user_emotions(translated_message, n=3)
+
         if hasattr(emotional_embedding, "tolist"):
             embedding_list = emotional_embedding.tolist()
         else:
