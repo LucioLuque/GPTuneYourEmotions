@@ -133,7 +133,8 @@ def recommend():
         genres        = data.get("genres", [])
         spotify_token = data.get("spotify_token")
         print(f"top genres: {genres}")
-        songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5)
+        # songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5)
+        songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, m=5)
         urls = get_playlist_link(spotify_token, songs_ids)
         response      = generate_recommendation(ui1, ui2, br1, emo1, emo2, song="")
         return jsonify({

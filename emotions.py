@@ -3,6 +3,7 @@ from torch import no_grad
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+import random
 
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
 model     = AutoModelForSequenceClassification.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -91,7 +92,61 @@ def get_k_mid_points(emotional_embedding_1, emotional_embedding_2, k=2):
         mid_points.append(mid_point)
     return mid_points
 
-def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2):
+# def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2):
+#     """
+#     Returns the IDs of the playlist songs that are closest to the k mid points between 
+#     two emotional embeddings.
+#     Default k=2 value returns the closest songs to the original inputs.
+#     """
+#     #if embeddings are not numpy arrays, convert them
+#     if not isinstance(embedding_1, np.ndarray):
+#         embedding_1 = np.array(embedding_1)
+#     if not isinstance(embedding_2, np.ndarray):
+#         embedding_2 = np.array(embedding_2)
+#     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
+#     similarities = cosine_similarity(mid_points, data_embeddings)
+#     closest_idxs = np.argmax(similarities, axis=1)
+#     closest_ids = [data_ids[idx] for idx in closest_idxs]
+#     return closest_ids
+    
+def choose_ids(similarities, k, m=0):
+    chosen_ids = []            
+    used_indices = set()       
+
+    for i in range(k):
+        sim_vector = similarities[i]      
+        
+        # Sort the similarity vector in descending order
+        sorted_indices = np.argsort(sim_vector)[::-1] 
+        
+        # m closest indices
+        top_m = sorted_indices[:m]
+
+        available = [idx for idx in top_m if idx not in used_indices]
+
+        if available:
+            # Si queda al menos uno libre dentro de los m más cercanos, elijo al azar uno de ellos
+            chosen_idx = random.choice(available)
+        else:
+            #si todos los m más cercanos ya se usan, recorro sorted_indices hasta
+            # encontrar el primero que no esté en used_indices
+            chosen_idx = None
+            for idx in sorted_indices:
+                if idx not in used_indices:
+                    chosen_idx = idx
+                    break
+            # por las dudas, si no se encuentra ninguno, lanzo un error
+            if chosen_idx is None:
+                raise ValueError(
+                    f"No quedan embeddings disponibles para el punto medio #{i}."
+                )
+
+        used_indices.add(chosen_idx)
+        chosen_ids.append(chosen_idx)
+
+    return chosen_ids
+
+def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, m=1):
     """
     Returns the IDs of the playlist songs that are closest to the k mid points between 
     two emotional embeddings.
@@ -104,7 +159,7 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2):
         embedding_2 = np.array(embedding_2)
     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
     similarities = cosine_similarity(mid_points, data_embeddings)
-    closest_idxs = np.argmax(similarities, axis=1)
+    closest_idxs = choose_ids(similarities, k, m)
+    print(len(closest_idxs))
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids
-    
