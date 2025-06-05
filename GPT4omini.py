@@ -9,7 +9,6 @@ from openai.types.chat import (
 )
 from openai import RateLimitError, APITimeoutError, APIConnectionError
 
-#### Se pasa por terminal
 ENDPOINT   = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 API_KEY    = os.getenv("AZURE_OPENAI_API_KEY", "")
 DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-mini-tutorial")
@@ -154,5 +153,42 @@ async def generate_translation(user_message: str) -> str:
         messages=messages,
         temperature=0.0,
         max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()
+
+
+async def rewrite_as_emotion_statement(user_input: str) -> str:
+    """
+    Rewrites user input as a direct emotional statement.
+    Example: 'I want to feel happy' → 'I feel happy'
+    """
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are an assistant that converts emotion-related expressions into direct emotional statements. "
+                "Your goal is to rephrase the user's message as a sentence like: 'I feel ___'.\n\n"
+                "• If the user expresses a desire to feel a certain way (e.g., 'I want to feel happy', 'I'd like to be calm'), "
+                "you must rewrite it as 'I feel ___', reflecting **only** the desired emotion.\n"
+                "• If the user expresses more than one desired emotion, include both in the same sentence.\n"
+                "• If the user already states an emotion directly (e.g., 'I'm anxious'), you should keep it as is.\n"
+                "• Do not include intentions or modal verbs like 'want', 'wish', 'hope', 'would like', etc.\n"
+                "• Your response must contain only the rewritten sentence and nothing else."
+            )
+        },
+        {
+            "role": "user",
+            "content": f"Original message: {user_input}\nRewritten:"
+        }
+    ]
+
+    response = await safe_chat_create(
+        model=DEPLOYMENT,
+        messages=messages,
+        temperature=0.3,
+        max_tokens=30,
+        top_p=0.9,
+        presence_penalty=0.0,
+        frequency_penalty=0.0,
     )
     return response.choices[0].message.content.strip()

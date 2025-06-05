@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from backend_factory import generate_reflection, generate_recommendation
-from GPT4omini import generate_translation
+from GPT4omini import generate_translation, rewrite_as_emotion_statement
 from emotions import detect_user_emotions, get_playlist_ids
 from urllib import request as urllib_request
 import json
@@ -133,6 +133,9 @@ def recommend():
         genres        = data.get("genres", [])
         spotify_token = data.get("spotify_token")
         print(f"top genres: {genres}")
+        reformulated_ui2 = asyncio.run(rewrite_as_emotion_statement(ui2))
+        emotional_embedding_2, emotions_2 = detect_user_emotions(reformulated_ui2, n=3)
+        emo2 = emotions_2[0] if emotions_2 else "neutral"
         # songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5)
         songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, m=5)
         urls = get_playlist_link(spotify_token, songs_ids)
