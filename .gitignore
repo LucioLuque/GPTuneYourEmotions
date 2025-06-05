@@ -6,3 +6,5 @@
 
 # Ignorar credenciales de Windows
 credentials.bat
+
+credentials.env
