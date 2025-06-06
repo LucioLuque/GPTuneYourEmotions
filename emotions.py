@@ -151,6 +151,9 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, m=1):
     Returns the IDs of the playlist songs that are closest to the k mid points between 
     two emotional embeddings.
     Default k=2 value returns the closest songs to the original inputs.
+    m parameter allows to choose how many closest songs to get to return one randomly.
+    m = 0/1 means that the closest song to each mid point will be returned.
+    n parameter should be added to allow how many sonsgs to return per mid point.
     """
     #if embeddings are not numpy arrays, convert them
     if not isinstance(embedding_1, np.ndarray):
@@ -160,6 +163,5 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, m=1):
     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
     similarities = cosine_similarity(mid_points, data_embeddings)
     closest_idxs = choose_ids(similarities, k, m)
-    print(len(closest_idxs))
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids
