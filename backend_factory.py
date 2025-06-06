@@ -38,7 +38,7 @@ from GPT4omini import (
     generate_recommendation as _g4o_recommend_async,
 )
 
-if BACKEND == "gpt4o":
+if BACKEND == "gpt4o-mini":
     def generate_reflection(message: str):
         """
         1) Detecta la emoción dominante con tu clasificador local.
