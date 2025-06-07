@@ -1,5 +1,5 @@
 # from model import generate_reflection, generate_recommendation
-from emotions import detect_user_emotions, get_k_mid_points, emotions_labels, filtered_labels, format_top_emotions, get_playlist_ids, data_embeddings, data_ids
+from GPTuneYourEmotions.emotions.emotions import detect_user_emotions, get_k_mid_points, emotions_labels, filtered_labels, format_top_emotions, get_playlist_ids, data_embeddings, data_ids
 # from song import get_song
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity

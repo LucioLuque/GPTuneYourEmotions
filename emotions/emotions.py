@@ -4,6 +4,11 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import random
+import os
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_embeddings.npy")
+DATASET_PATH = os.path.join(ROOT_DIR, "data", "dataset_with_embeddings.csv")
 
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
 model     = AutoModelForSequenceClassification.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -15,8 +20,8 @@ id2label = model.config.id2label
 neutral_idx = next(i for i,lbl in id2label.items() if lbl == "neutral")
 _mask = np.arange(len(id2label)) != neutral_idx
 
-data_embeddings = np.load("all_embeddings.npy")
-df = pd.read_csv("dataset_with_embeddings.csv")
+data_embeddings = np.load(EMBEDDINGS_PATH)
+df = pd.read_csv(DATASET_PATH)
 data_ids = df["id"]
 
 filtered_labels = {
@@ -92,76 +97,76 @@ def get_k_mid_points(emotional_embedding_1, emotional_embedding_2, k=2):
         mid_points.append(mid_point)
     return mid_points
 
-# def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2):
-#     """
-#     Returns the IDs of the playlist songs that are closest to the k mid points between 
-#     two emotional embeddings.
-#     Default k=2 value returns the closest songs to the original inputs.
-#     """
-#     #if embeddings are not numpy arrays, convert them
-#     if not isinstance(embedding_1, np.ndarray):
-#         embedding_1 = np.array(embedding_1)
-#     if not isinstance(embedding_2, np.ndarray):
-#         embedding_2 = np.array(embedding_2)
-#     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
-#     similarities = cosine_similarity(mid_points, data_embeddings)
-#     closest_idxs = np.argmax(similarities, axis=1)
-#     closest_ids = [data_ids[idx] for idx in closest_idxs]
-#     return closest_ids
-    
-def choose_ids(similarities, k, m=0):
+def get_available_indexes(sorted_indexes, used_indexes, m):
+    """
+    Returns a list of available indexes from sorted_indexes that are not in used_indexes,
+    limited to the first m elements.
+    """
+    #hacer funcion de chequeos
+    available = []
+    for idx in sorted_indexes:
+        if idx not in used_indexes:
+            available.append(idx)
+            if len(available) == m:
+                break
+    return available
+
+
+def choose_ids(similarities, k, selection='best', m=1, 
+               mode='constant', n=1):
+    #hacer funcion de chequeos
     chosen_ids = []            
-    used_indices = set()       
-
-    for i in range(k):
-        sim_vector = similarities[i]      
-        
-        # Sort the similarity vector in descending order
-        sorted_indices = np.argsort(sim_vector)[::-1] 
-        
-        # m closest indices
-        top_m = sorted_indices[:m]
-
-        available = [idx for idx in top_m if idx not in used_indices]
-
-        if available:
-            # Si queda al menos uno libre dentro de los m más cercanos, elijo al azar uno de ellos
-            chosen_idx = random.choice(available)
+    used_indexes = set()
+    if mode == 'constant':
+        #constant number of songs (n) to select for each mid point	
+        n_to_selects = [n] * k
+    elif mode == 'interpolation':
+        if n == 0:
+            #interpolacion lineal entre 1 y k
+            n_to_selects = [i + 1 for i in range(k)]
         else:
-            #si todos los m más cercanos ya se usan, recorro sorted_indices hasta
-            # encontrar el primero que no esté en used_indices
-            chosen_idx = None
-            for idx in sorted_indices:
-                if idx not in used_indices:
-                    chosen_idx = idx
-                    break
-            # por las dudas, si no se encuentra ninguno, lanzo un error
-            if chosen_idx is None:
-                raise ValueError(
-                    f"No quedan embeddings disponibles para el punto medio #{i}."
-                )
+            #interpolacion lineal entre 1 y n
+            n_to_selects = np.linspace(1, n, k, dtype=int).tolist() 
+    else:
+        raise ValueError("Invalid mode. Use 'constant' or 'interpolation'.")
 
-        used_indices.add(chosen_idx)
-        chosen_ids.append(chosen_idx)
+    print(f"Number of songs to select for each mid point: {n_to_selects}")
+    for i in range(k):
+        sim_vector = similarities[i]
 
+        sorted_indexes = np.argsort(sim_vector)[::-1]
+        n_to_select = n_to_selects[i]
+        dynamic_m = m
+        if dynamic_m <= n_to_select:
+            print(f"Had to increase m from {dynamic_m} to {n_to_select*2} to select enough songs.")
+            dynamic_m = n_to_select*2
+        
+        available = get_available_indexes(sorted_indexes, used_indexes, dynamic_m)
+        if selection == 'best':
+            chosen_idxs = available[:n_to_select]
+        elif selection == 'random':
+            chosen_idxs = random.sample(available, n_to_select)
+        
+        chosen_ids.extend(chosen_idxs)
+        used_indexes.update(chosen_idxs)
     return chosen_ids
 
-def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, m=1):
+def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
+                 
     """
     Returns the IDs of the playlist songs that are closest to the k mid points between 
     two emotional embeddings.
     Default k=2 value returns the closest songs to the original inputs.
-    m parameter allows to choose how many closest songs to get to return one randomly.
-    m = 0/1 means that the closest song to each mid point will be returned.
-    n parameter should be added to allow how many sonsgs to return per mid point.
     """
     #if embeddings are not numpy arrays, convert them
     if not isinstance(embedding_1, np.ndarray):
         embedding_1 = np.array(embedding_1)
     if not isinstance(embedding_2, np.ndarray):
         embedding_2 = np.array(embedding_2)
+    #hacer funcion de chequeos
     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
     similarities = cosine_similarity(mid_points, data_embeddings)
-    closest_idxs = choose_ids(similarities, k, m)
+    closest_idxs = choose_ids(similarities, k, selection, m, mode, n)
+    print(f"Amount of songs selected: {len(closest_idxs)}")
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids

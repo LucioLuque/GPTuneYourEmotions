@@ -23,17 +23,17 @@ python app.py
 
 
 import os, asyncio
-from emotions import detect_user_emotions  
+from emotions.emotions import detect_user_emotions  
 
-BACKEND = os.getenv("BOT_BACKEND", "flan").lower()   # flan | gpt4o
-print(f"[backend_factory] BOT_BACKEND = '{BACKEND}'")  # imprime "flan" o "gpt4o"
+BACKEND = os.getenv("BOT_BACKEND", "flan").lower()   # flan | gpt4o-mini
+print(f"[backend_factory] BOT_BACKEND = '{BACKEND}'")  # imprime "flan" o "gpt4o-mini"
 #Importa las funciones de flan y de gpt-4o-mini y les pone un alias
-from model import (
+from chatbots.flan_t5 import (
     generate_reflection   as _flan_reflect,
     generate_recommendation as _flan_recommend,
 )
 
-from GPT4omini import (
+from chatbots.GPT4omini import (
     generate_reflection     as _g4o_reflect_async,
     generate_recommendation as _g4o_recommend_async,
 )

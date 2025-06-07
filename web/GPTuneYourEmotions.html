@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPTune your emotions</title>
-  <link rel="preload" href="loginlogo.png" as="image" />
+  <link rel="preload" href="/static/loginlogo.png" as="image" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
   <style>
     * {
@@ -226,7 +226,7 @@
     <span>GPTune your emotions</span>
     <button id="resetButton" onclick="resetChat()">Reset</button>
     <div class="login-wrapper">
-      <img id="profileIcon" class="icon-button" src="loginlogo.png" alt="Perfil" onclick="toggleLoginMenu()" />
+      <img id="profileIcon" class="icon-button" src="/static/loginlogo.png" alt="Perfil" onclick="toggleLoginMenu()" />
       <div id="loginMenu" class="login-menu hidden">
         <button onclick="login()">Login</button>
         <button onclick="logout()">Logout</button>
@@ -291,7 +291,7 @@
       profileIcon.style.boxShadow       = "0 0 10px #1DB954, 0 0 20px #1DB95455";
     } else {
       // Icono por defecto → glow sólo si está habilitado
-      profileIcon.src                   = "loginlogo.png";
+      profileIcon.src                   = "/static/loginlogo.png";
       profileIcon.alt                   = "Icono por defecto";
       profileIcon.style.objectFit       = "contain";
       profileIcon.style.padding         = "4px";
@@ -527,7 +527,7 @@
   document.getElementById('userInput').addEventListener('keydown', handleKey);
 </script>
 <script type="module">
-  import { login } from './auth.js';
+  import { login } from '/static/auth.js';
 
   window.login = async () => {
     if (!loginAllowed) {

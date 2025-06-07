@@ -1,5 +1,8 @@
 const clientId = 'bdbf0e0e3bf24066aa88ad22c5841cf7';
-const redirectUri = 'http://127.0.0.1:5500/GPTuneYourEmotions.html';
+// const redirectUri = 'http://127.0.0.1:5500/GPTuneYourEmotions.html';
+// const redirectUri = 'http://127.0.0.1:5000/';
+// const redirectUri = 'http://127.0.0.1:5500/GPTuneYourEmotions.html';
+const redirectUri = 'http://127.0.0.1:5500/web/GPTuneYourEmotions.html';
 
 const generateRandomString = (length) => {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

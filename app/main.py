@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from backend_factory import generate_reflection, generate_recommendation
-from GPT4omini import generate_translation, rewrite_as_emotion_statement
-from emotions import detect_user_emotions, get_playlist_ids
+from app.backend_factory import generate_reflection, generate_recommendation
+from chatbots.GPT4omini import generate_translation, rewrite_as_emotion_statement
+from emotions.emotions import detect_user_emotions, get_playlist_ids
 from urllib import request as urllib_request
 import json
 import asyncio
@@ -10,7 +10,10 @@ import os
 
 BACKEND = os.getenv("BOT_BACKEND", "flan").lower()
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app = Flask(__name__,
+            static_folder=os.path.join(BASE_DIR, "static"),
+            template_folder=os.path.join(BASE_DIR, "web"))
 CORS(app)
 
 def spotify_api_get(url: str, access_token: str) -> dict:
@@ -81,8 +84,11 @@ def detect_emotion():
         data = request.get_json(force=True)
         message = data.get("message", "")
         
-        if BACKEND == "gpt4o":
+        if BACKEND == "gpt4o-mini":
+            
             translated_message = asyncio.run(generate_translation(message))
+            print(f"Orginal message (turn 1): {message}")
+            print(f"Translated message (turn 1): {translated_message}")
         else:
             translated_message = message
 
@@ -133,11 +139,17 @@ def recommend():
         genres        = data.get("genres", [])
         spotify_token = data.get("spotify_token")
         print(f"top genres: {genres}")
-        reformulated_ui2 = asyncio.run(rewrite_as_emotion_statement(ui2))
+        if BACKEND == "gpt4o-mini":
+            reformulated_ui2 = asyncio.run(rewrite_as_emotion_statement(ui2))
+            print(f"Orginal user input 2: {ui2}")
+            print(f"Reformulated user input 2: {reformulated_ui2}")
+        else:
+            reformulated_ui2 = ui2
         emotional_embedding_2, emotions_2 = detect_user_emotions(reformulated_ui2, n=3)
         emo2 = emotions_2[0] if emotions_2 else "neutral"
-        # songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5)
-        songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, m=5)
+        
+        songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, 
+                               selection = 'random', m=10, mode='interpolation', n=4)
         urls = get_playlist_link(spotify_token, songs_ids)
         response      = generate_recommendation(ui1, ui2, br1, emo1, emo2, song="")
         return jsonify({
@@ -150,6 +162,9 @@ def recommend():
             "response": "No pude generar la recomendación.",
             "error": str(e)
         }), 200
-
+    
+@app.route('/')
+def index():
+    return render_template("GPTuneYourEmotions.html")
 if __name__ == '__main__':
     app.run(debug=True)
