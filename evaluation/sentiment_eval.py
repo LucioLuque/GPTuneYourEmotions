@@ -1,6 +1,6 @@
 import os, sys, torch, numpy as np, pandas as pd
 import seaborn as sns, matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from transformers import AutoTokenizer, AutoModel
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -45,8 +45,8 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0):
     plt.xticks(rotation=45, ha="right", fontsize=8)
     plt.yticks(fontsize=8)
     plt.tight_layout()
-    plt.show()
     plt.savefig(fname, dpi=300)
+    plt.show()
     plt.close()
 
 def main():
@@ -64,6 +64,12 @@ def main():
     plot_confusion(hard_cm, emotions_labels,
                    title="Hard Confusion Matrix",
                    fname=os.path.join(RESULTS_STORAGE_PATH, "cm_hard.png"), vmax=hard_cm.max())
+    
+    print("=== Classification report ===")
+    report = classification_report(df["label"], df["pred"], digits=3)
+    report_path = os.path.join(RESULTS_STORAGE_PATH, "classification_report.txt")
+    with open(report_path, "w") as f:
+        f.write(report)
 
     S = load_similarity_matrix()
     soft_scores = [S[IDX[t], IDX[p]] for t, p in zip(y_true, y_pred)]
