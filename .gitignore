@@ -1,6 +1,8 @@
 # Ignorar archivos CSV
 *.csv
 
+!evaluation/sentiment/eval_prompts.csv
+
 # Ignorar archivos NPY (NumPy)
 *.npy
 
