@@ -1,33 +1,33 @@
                 precision    recall  f1-score   support
 
-    admiration      0.400     1.000     0.571         2
-     amusement      1.000     1.000     1.000         2
-         anger      1.000     0.500     0.667         2
-     annoyance      1.000     0.500     0.667         2
-      approval      0.000     0.000     0.000         2
-        caring      1.000     1.000     1.000         2
-     confusion      0.667     1.000     0.800         2
-     curiosity      1.000     0.500     0.667         2
-        desire      1.000     1.000     1.000         2
-disappointment      0.667     1.000     0.800         2
-   disapproval      1.000     1.000     1.000         2
-       disgust      1.000     0.500     0.667         2
- embarrassment      0.000     0.000     0.000         2
-    excitement      0.667     1.000     0.800         2
-          fear      0.500     1.000     0.667         2
-     gratitude      1.000     1.000     1.000         2
-         grief      0.000     0.000     0.000         2
-           joy      1.000     1.000     1.000         2
-          love      1.000     0.500     0.667         2
-   nervousness      0.000     0.000     0.000         2
-      optimism      1.000     1.000     1.000         2
-         pride      1.000     0.500     0.667         2
-   realization      0.500     1.000     0.667         2
-        relief      0.000     0.000     0.000         2
-       remorse      1.000     1.000     1.000         2
-       sadness      0.400     1.000     0.571         2
-      surprise      0.333     0.500     0.400         2
+    admiration      0.500     1.000     0.667         3
+     amusement      1.000     1.000     1.000         3
+         anger      1.000     0.667     0.800         3
+     annoyance      1.000     0.333     0.500         3
+      approval      0.333     0.333     0.333         3
+        caring      1.000     1.000     1.000         3
+     confusion      0.750     1.000     0.857         3
+     curiosity      1.000     0.333     0.500         3
+        desire      1.000     1.000     1.000         3
+disappointment      0.500     1.000     0.667         3
+   disapproval      1.000     0.667     0.800         3
+       disgust      1.000     0.333     0.500         3
+ embarrassment      0.000     0.000     0.000         3
+    excitement      0.500     0.667     0.571         3
+          fear      0.600     1.000     0.750         3
+     gratitude      1.000     0.667     0.800         3
+         grief      0.000     0.000     0.000         3
+           joy      0.429     1.000     0.600         3
+          love      1.000     0.333     0.500         3
+   nervousness      0.000     0.000     0.000         3
+      optimism      1.000     1.000     1.000         3
+         pride      1.000     0.333     0.500         3
+   realization      0.375     1.000     0.545         3
+        relief      0.000     0.000     0.000         3
+       remorse      1.000     1.000     1.000         3
+       sadness      0.429     1.000     0.600         3
+      surprise      0.400     0.667     0.500         3
 
-      accuracy                          0.685        54
-     macro avg      0.672     0.685     0.640        54
-  weighted avg      0.672     0.685     0.640        54
+      accuracy                          0.642        81
+     macro avg      0.660     0.642     0.592        81
+  weighted avg      0.660     0.642     0.592        81
