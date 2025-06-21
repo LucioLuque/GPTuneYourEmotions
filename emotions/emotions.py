@@ -16,7 +16,6 @@ model.eval()
 
 id2label = model.config.id2label
 
-
 neutral_idx = next(i for i,lbl in id2label.items() if lbl == "neutral")
 _mask = np.arange(len(id2label)) != neutral_idx
 

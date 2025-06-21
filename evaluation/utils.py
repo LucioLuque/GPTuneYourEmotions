@@ -4,16 +4,21 @@ import matplotlib.pyplot as plt
 from transformers import AutoTokenizer, AutoModel
 import numpy as np
 import torch
+from sklearn.metrics.pairwise import cosine_similarity
 
 import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join("../..", "emotions")))
-from emotions import detect_user_emotions, emotions_labels
+from emotions import detect_user_emotions, emotions_labels, data_embeddings, choose_ids, df, data_ids
 
 def predict_one(text: str) -> str:
     """Devuelve la emoción top-1 de roBERTa."""
     return detect_user_emotions(text, n=1)[1][0]
+
+def get_emotional_embedding(text: str) -> np.ndarray:
+    """Devuelve la representación emocional de un texto."""
+    return detect_user_emotions(text, n=1)[0]
 
 def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
     """Carga (o construye) la matriz de similitud entre emociones."""
@@ -48,3 +53,28 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, sav
         plt.savefig(fname, dpi=300)
     plt.show()
     plt.close()
+
+
+def get_lyrics(embedding_1):
+                 
+    """
+    """
+    if not isinstance(embedding_1, np.ndarray):
+        embedding_1 = np.array(embedding_1)
+    if embedding_1.ndim == 1:
+        embedding_1 = embedding_1.reshape(1, -1)
+
+    similarities = cosine_similarity(embedding_1, data_embeddings)[0]
+    #get the most similar song without choose_ids, only the best match
+    best_idx = np.argmax(similarities)
+    #its only one get_song
+    closest_id = data_ids[best_idx]
+    lyrics = df.loc[df["id"] == closest_id, "lyrics"].iat[0]
+    return lyrics
+
+
+
+    # closest_idxs = choose_ids(similarities, k, selection, m, mode, n)
+    # closest_id = [data_ids[idx] for idx in closest_idxs]
+    # song = df[df["id"].isin(closest_id)]["lyrics"].values.tolist()
+    # return song
