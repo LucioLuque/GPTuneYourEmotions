@@ -16,6 +16,10 @@ def predict_one(text: str) -> str:
     """Devuelve la emoción top-1 de roBERTa."""
     return detect_user_emotions(text, n=1)[1][0]
 
+def predict_two(text: str) -> str:
+    """Devuelve las emociones top-2 de roBERTa."""
+    return detect_user_emotions(text, n=2)[1]
+
 def get_emotional_embedding(text: str) -> np.ndarray:
     """Devuelve la representación emocional de un texto."""
     return detect_user_emotions(text, n=1)[0]
@@ -53,7 +57,38 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, sav
         plt.savefig(fname, dpi=300)
     plt.show()
     plt.close()
+    
 
+def align_predictions_with_labels(pred, real):
+    """
+    Reordena las emociones predichas y reales para que las emociones coincidentes estén en el mismo índice.
+    Si ambas predicciones coinciden exactamente con las etiquetas reales, se mantiene el orden original.
+    """
+    # Si ambas predicciones coinciden exactamente con las etiquetas reales, mantener el orden
+    if set(pred) == set(real):
+        return sorted(pred), sorted(real)
+
+    # Reordenar para que las emociones coincidentes estén en el mismo índice
+    aligned_pred = [None, None]
+    aligned_real = [None, None]
+
+    # Asignar las emociones coincidentes al mismo índice
+    for i, emotion in enumerate(real):
+        if emotion in pred:
+            aligned_pred[i] = emotion
+            aligned_real[i] = emotion
+
+    # Asignar las emociones restantes
+    remaining_pred = [p for p in pred if p not in aligned_pred]
+    remaining_real = [r for r in real if r not in aligned_real]
+
+    for i in range(2):
+        if aligned_pred[i] is None:
+            aligned_pred[i] = remaining_pred.pop(0)
+        if aligned_real[i] is None:
+            aligned_real[i] = remaining_real.pop(0)
+
+    return aligned_pred, aligned_real
 
 def get_lyrics(embedding_1):
                  

@@ -2,6 +2,8 @@
 *.csv
 
 !evaluation/sentiment/eval_prompts.csv
+!evaluation/sentiment/lyrics_sample.csv
+!evaluation/sentiment/eval_lyrics_labels.csv
 
 # Ignorar archivos NPY (NumPy)
 *.npy
