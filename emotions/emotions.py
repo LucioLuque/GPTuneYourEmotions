@@ -238,7 +238,7 @@ def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='b
         available = get_available_indexes(sorted_indexes, used_indexes, dynamic_m)
 
         # Reordenamiento según contexto 
-        ctx_sim_vector = cosine_similarity([contextual_midpoints[i]], emotional_data_embeddings[available])[0] #poner contextual_data_emb
+        ctx_sim_vector = cosine_similarity([contextual_midpoints[i]], contextual_data_embeddings[available])[0] #poner contextual_data_emb
         sorted_ctx_indexes = np.argsort(ctx_sim_vector)[::-1]
         sorted_available = [available[j] for j in sorted_ctx_indexes]
     
