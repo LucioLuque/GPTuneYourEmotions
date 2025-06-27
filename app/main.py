@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from app.backend_factory import generate_reflection, generate_recommendation
 from chatbots.GPT4omini import generate_translation, rewrite_as_emotion_statement
-from emotions.emotions import detect_user_emotions, get_playlist_ids
+from emotions.emotions import detect_user_emotions, get_playlist_ids, get_playlist_ids2
+from context.context import get_context_embedding 
 from urllib import request as urllib_request
 import json
 import asyncio
@@ -139,17 +140,32 @@ def recommend():
         genres        = data.get("genres", [])
         spotify_token = data.get("spotify_token")
         print(f"top genres: {genres}")
+
+
         if BACKEND == "gpt4o-mini":
             reformulated_ui2 = asyncio.run(rewrite_as_emotion_statement(ui2))
             print(f"Orginal user input 2: {ui2}")
             print(f"Reformulated user input 2: {reformulated_ui2}")
         else:
             reformulated_ui2 = ui2
+
+
         emotional_embedding_2, emotions_2 = detect_user_emotions(reformulated_ui2, n=3)
         emo2 = emotions_2[0] if emotions_2 else "neutral"
+
         
-        songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, 
-                               selection = 'random', m=10, mode='interpolation', n=4)
+        context_embedding_1 = get_context_embedding(ui1) #aca no estamos usando el translated que es como sacamos el embedding emocional!
+        context_embedding_2 = get_context_embedding(reformulated_ui2) #aca usamos reformulado?
+
+
+        songs_ids = get_playlist_ids2(emotional_embedding_1, emotional_embedding_2,
+                                      context_embedding_1, context_embedding_2, 
+                                      genres, k=5, selection='random', m=10, mode='interpolation', n=4)
+
+        # songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, 
+        #                        selection = 'random', m=10, mode='interpolation', n=4)
+        
+
         urls = get_playlist_link(spotify_token, songs_ids)
         response      = generate_recommendation(ui1, ui2, br1, emo1, emo2, song="")
         return jsonify({

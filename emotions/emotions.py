@@ -7,8 +7,10 @@ import random
 import os
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_embeddings.npy")
+EMOTIONAL_EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_embeddings.npy")
 DATASET_PATH = os.path.join(ROOT_DIR, "data", "dataset_with_embeddings.csv")
+CONTEXTUAL_EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_context_embeddings.npy")
+
 
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
 model     = AutoModelForSequenceClassification.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -19,7 +21,7 @@ id2label = model.config.id2label
 neutral_idx = next(i for i,lbl in id2label.items() if lbl == "neutral")
 _mask = np.arange(len(id2label)) != neutral_idx
 
-data_embeddings = np.load(EMBEDDINGS_PATH)
+emotional_data_embeddings = np.load(EMOTIONAL_EMBEDDINGS_PATH)
 df = pd.read_csv(DATASET_PATH)
 data_ids = df["id"]
 
@@ -29,6 +31,8 @@ filtered_labels = {
 }
 
 emotions_labels = list(filtered_labels.values())
+
+contextual_data_embeddings = np.load(CONTEXTUAL_EMBEDDINGS_PATH)
 
 def get_token_chunks(text, tokenizer, max_length=512, stride=384):
     encoding = tokenizer(text, return_tensors="pt", truncation=False)
@@ -164,7 +168,7 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best
         embedding_2 = np.array(embedding_2)
     #hacer funcion de chequeos
     mid_points = get_k_mid_points(embedding_1, embedding_2, k)
-    similarities = cosine_similarity(mid_points, data_embeddings)
+    similarities = cosine_similarity(mid_points, emotional_data_embeddings)
     closest_idxs = choose_ids(similarities, k, selection, m, mode, n)
     print(f"Amount of songs selected: {len(closest_idxs)}")
     closest_ids = [data_ids[idx] for idx in closest_idxs]
@@ -173,7 +177,7 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best
 
 
 
-def get_playlist_ids2(emocional_emb1, emocional_emb2, contextual_emb1, contextual_emb2,  genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
+def get_playlist_ids2(emotional_emb1, emotional_emb2, contextual_emb1, contextual_emb2,  genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
                  
     """
     Returns the IDs of the playlist songs that are closest to the k mid points between 
@@ -181,18 +185,18 @@ def get_playlist_ids2(emocional_emb1, emocional_emb2, contextual_emb1, contextua
     Default k=2 value returns the closest songs to the original inputs.
     """
     #if embeddings are not numpy arrays, convert them
-    if not isinstance(emocional_emb1, np.ndarray):
-        emocional_emb1 = np.array(emocional_emb1)
-    if not isinstance(emocional_emb2, np.ndarray):
-        emocional_emb2 = np.array(emocional_emb2)
+    if not isinstance(emotional_emb1, np.ndarray):
+        emotional_emb1 = np.array(emotional_emb1)
+    if not isinstance(emotional_emb2, np.ndarray):
+        emotional_emb2 = np.array(emotional_emb2)
     if not isinstance(contextual_emb1, np.ndarray):
         contextual_emb1 = np.array(contextual_emb1)
     if not isinstance(contextual_emb2, np.ndarray):
         contextual_emb2 = np.array(contextual_emb2)
 
     #hacer funcion de chequeos
-    emotional_mid_points = get_k_mid_points(emocional_emb1, emocional_emb2, k)
-    emotional_similarities = cosine_similarity(emotional_mid_points, data_embeddings)  #poner emotional_data_emb
+    emotional_mid_points = get_k_mid_points(emotional_emb1, emotional_emb2, k)
+    emotional_similarities = cosine_similarity(emotional_mid_points, emotional_data_embeddings)  #poner emotional_data_emb
     contextual_mid_points = get_k_mid_points(contextual_emb1, contextual_emb2, k)
 
     closest_idxs = choose_ids_dual_filter(emotional_similarities, contextual_mid_points, k,
@@ -234,7 +238,7 @@ def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='b
         available = get_available_indexes(sorted_indexes, used_indexes, dynamic_m)
 
         # Reordenamiento según contexto 
-        ctx_sim_vector = cosine_similarity([contextual_midpoints[i]], data_embeddings[available])[0] #poner contextual_data_emb
+        ctx_sim_vector = cosine_similarity([contextual_midpoints[i]], emotional_data_embeddings[available])[0] #poner contextual_data_emb
         sorted_ctx_indexes = np.argsort(ctx_sim_vector)[::-1]
         sorted_available = [available[j] for j in sorted_ctx_indexes]
     
