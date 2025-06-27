@@ -169,3 +169,87 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best
     print(f"Amount of songs selected: {len(closest_idxs)}")
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids
+
+
+
+
+def get_playlist_ids2(emocional_emb1, emocional_emb2, contextual_emb1, contextual_emb2,  genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
+                 
+    """
+    Returns the IDs of the playlist songs that are closest to the k mid points between 
+    two emotional embeddings.
+    Default k=2 value returns the closest songs to the original inputs.
+    """
+    #if embeddings are not numpy arrays, convert them
+    if not isinstance(emocional_emb1, np.ndarray):
+        emocional_emb1 = np.array(emocional_emb1)
+    if not isinstance(emocional_emb2, np.ndarray):
+        emocional_emb2 = np.array(emocional_emb2)
+    if not isinstance(contextual_emb1, np.ndarray):
+        contextual_emb1 = np.array(contextual_emb1)
+    if not isinstance(contextual_emb2, np.ndarray):
+        contextual_emb2 = np.array(contextual_emb2)
+
+    #hacer funcion de chequeos
+    emotional_mid_points = get_k_mid_points(emocional_emb1, emocional_emb2, k)
+    emotional_similarities = cosine_similarity(emotional_mid_points, data_embeddings)  #poner emotional_data_emb
+    contextual_mid_points = get_k_mid_points(contextual_emb1, contextual_emb2, k)
+
+    closest_idxs = choose_ids_dual_filter(emotional_similarities, contextual_mid_points, k,
+                                          selection=selection, m=m, mode=mode, n=n)
+    
+
+
+    print(f"Amount of songs selected: {len(closest_idxs)}")
+    closest_ids = [data_ids[idx] for idx in closest_idxs]
+    return closest_ids
+
+
+def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='best', m=1, mode='constant', n=1):
+    chosen_ids = []
+    used_indexes = set()
+
+    # Determinar cuántas canciones seleccionar por punto
+    if mode == 'constant':
+        n_to_selects = [n] * k
+    elif mode == 'interpolation':
+        if n == 0:
+            n_to_selects = [i + 1 for i in range(k)]
+        else:
+            n_to_selects = np.linspace(1, n, k, dtype=int).tolist()
+    else:
+        raise ValueError("Invalid mode. Use 'constant' or 'interpolation'.")
+
+    print(f"Number of songs to select for each mid point: {n_to_selects}")
+
+    for i in range(k):
+        emo_sim_vector = emotional_sims[i]
+        sorted_indexes = np.argsort(emo_sim_vector)[::-1]
+        n_to_select = n_to_selects[i]
+        dynamic_m = m
+        if dynamic_m <= n_to_select:
+            print(f"Had to increase m from {dynamic_m} to {n_to_select*2} to select enough songs.")
+            dynamic_m = n_to_select*2
+
+        available = get_available_indexes(sorted_indexes, used_indexes, dynamic_m)
+
+        # Reordenamiento según contexto 
+        ctx_sim_vector = cosine_similarity([contextual_midpoints[i]], data_embeddings[available])[0] #poner contextual_data_emb
+        sorted_ctx_indexes = np.argsort(ctx_sim_vector)[::-1]
+        sorted_available = [available[j] for j in sorted_ctx_indexes]
+    
+
+        # Aplicar selección final según criterio
+        if selection == 'best':
+            selected = sorted_available[:n_to_select]
+        elif selection == 'random':
+            if len(sorted_available) < n_to_select:
+                raise ValueError(f"Not enough candidates to sample: {len(sorted_available)} available, {n_to_select} needed.")
+            selected = random.sample(sorted_available, n_to_select)
+        else:
+            raise ValueError("Invalid selection mode. Use 'best' or 'random'.")
+
+        chosen_ids.extend(selected)
+        used_indexes.update(selected)
+
+    return chosen_ids
