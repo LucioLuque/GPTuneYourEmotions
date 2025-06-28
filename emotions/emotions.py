@@ -176,7 +176,7 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best
 
 
 
-
+#filtrar por emociones y luego por contexto
 def get_playlist_ids2(emotional_emb1, emotional_emb2, contextual_emb1, contextual_emb2,  genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
                  
     """
@@ -257,3 +257,65 @@ def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='b
         used_indexes.update(selected)
 
     return chosen_ids
+
+
+
+
+def get_playlist_ids2_weighted(emotional_emb1,emotional_emb2,contextual_emb1, contextual_emb2, genres=[], k=2, weight_emotion=0.7, weight_context=0.3,selection='best', n=1):
+    # 1) Convertir a numpy si hace falta
+    for arr in (emotional_emb1, emotional_emb2, contextual_emb1, contextual_emb2):
+        if not isinstance(arr, np.ndarray):
+            arr = np.array(arr)
+    # 2) Calcular mid-points
+    emo_k = get_k_mid_points(emotional_emb1, emotional_emb2, k)
+    ctx_k = get_k_mid_points(contextual_emb1, contextual_emb2, k)
+    # 3) Similitudes por separado
+    emo_sims = cosine_similarity(emo_k, emotional_data_embeddings)
+    ctx_sims = cosine_similarity(ctx_k,   contextual_data_embeddings)
+    # 4) Selección ponderada
+    chosen_idxs = choose_ids_weighted(emo_sims, ctx_sims, k,
+                                      weight_emotion, weight_context,
+                                      selection, n)
+    print(f"Amount of songs selected: {len(chosen_idxs)}")
+    return [data_ids[i] for i in chosen_idxs]
+
+
+
+def choose_ids_weighted(emo_sims, ctx_sims, k,
+                        w_emo, w_ctx,
+                        selection='best', n=1):
+    """
+    Para cada uno de los k mid-points, calcula la similitud combinada
+    y selecciona las n canciones con mayor score (o muestra aleatoria
+    dentro de las top-n si selection='random').
+    """
+    chosen = []
+    used = set()
+
+    for i in range(k):
+        # 1) Score combinado
+        combined = w_emo * emo_sims[i] + w_ctx * ctx_sims[i]
+        # 2) Orden de mayor a menor
+        sorted_idxs = np.argsort(combined)[::-1]
+
+        # 3) Si no quieres repetir canciones entre puntos:
+        #    filtrar los ya usados
+        if used:
+            sorted_idxs = [idx for idx in sorted_idxs if idx not in used]
+
+        # 4) Selección final
+        if selection == 'best':
+            pick = sorted_idxs[:n]
+        elif selection == 'random':
+            # tomar muestra aleatoria de las top-(n*2) para tener variedad
+            top_pool = sorted_idxs[: n*2 ]
+            if len(top_pool) < n:
+                raise ValueError(f"Pocos candidatos: {len(top_pool)} disponibles, {n} requeridos.")
+            pick = random.sample(top_pool, n)
+        else:
+            raise ValueError("selection debe ser 'best' o 'random'.")
+
+        chosen.extend(pick)
+        used.update(pick)
+
+    return chosen

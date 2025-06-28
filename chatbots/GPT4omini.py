@@ -166,14 +166,13 @@ async def rewrite_as_emotion_statement(user_input: str) -> str:
         {
             "role": "system",
             "content": (
-                "You are an assistant that converts emotion-related expressions into direct emotional statements. "
-                "Your goal is to rephrase the user's message as a sentence like: 'I feel ___'.\n\n"
-                "• If the user expresses a desire to feel a certain way (e.g., 'I want to feel happy', 'I'd like to be calm'), "
-                "you must rewrite it as 'I feel ___', reflecting **only** the desired emotion.\n"
-                "• If the user expresses more than one desired emotion, include both in the same sentence.\n"
-                "• If the user already states an emotion directly (e.g., 'I'm anxious'), you should keep it as is.\n"
-                "• Do not include intentions or modal verbs like 'want', 'wish', 'hope', 'would like', etc.\n"
-                "• Your response must contain only the rewritten sentence and nothing else."
+                "You are an assistant that reformulates user messages into direct emotional statements, preserving the intended emotion and important context if available.\n\n"
+                "• If the user says something like 'I want to feel happy because tomorrow is my wedding', you must rewrite it as: 'I feel happy because tomorrow is my wedding'.\n"
+                "• The rewritten sentence must be declarative and use present tense (e.g., 'I feel ___'), avoiding desires like 'want', 'wish', or 'would like'.\n"
+                "• If there are multiple emotions, include all of them.\n"
+                "• Never omit important context like reasons, events, or explanations that the user provided.\n"
+                "• Do not introduce new information. Just rewrite faithfully.\n"
+                "• Output only the rewritten sentence."
             )
         },
         {

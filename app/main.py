@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from app.backend_factory import generate_reflection, generate_recommendation
 from chatbots.GPT4omini import generate_translation, rewrite_as_emotion_statement
-from emotions.emotions import detect_user_emotions, get_playlist_ids, get_playlist_ids2
+from emotions.emotions import detect_user_emotions, get_playlist_ids, get_playlist_ids2, get_playlist_ids3, get_playlist_ids4, get_playlist_ids2_weighted
 from context.context import get_context_embedding 
 from urllib import request as urllib_request
 import json
@@ -158,12 +158,12 @@ def recommend():
         context_embedding_2 = get_context_embedding(reformulated_ui2) #aca usamos reformulado?
 
 
-        songs_ids = get_playlist_ids2(emotional_embedding_1, emotional_embedding_2,
-                                      context_embedding_1, context_embedding_2, 
-                                      genres, k=5, selection='random', m=10, mode='interpolation', n=4)
+        songs_ids = get_playlist_ids2_weighted(emotional_embedding_1, emotional_embedding_2,
+                                                context_embedding_1, context_embedding_2,  genres,
+                                                weight_emotion=0.4, weight_context=0.6,
+                                               k=5, selection='best', n=1)
 
-        # songs_ids = get_playlist_ids(emotional_embedding_1, emotional_embedding_2, genres, k=5, 
-        #                        selection = 'random', m=10, mode='interpolation', n=4)
+    
         
 
         urls = get_playlist_link(spotify_token, songs_ids)
