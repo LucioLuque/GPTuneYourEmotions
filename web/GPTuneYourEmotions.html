@@ -419,6 +419,7 @@
 
   // —————— Primera iteración ——————
   if (botResponses === 0) {
+    const { emotion, embedding } = await detectEmotion(userText, 1);
     firstUserMessage   = userText;
     emotionDetected1   = emotion;
     emotionEmbedding1  = embedding;
@@ -438,7 +439,8 @@
     return;
   }
 
-  // —————— Segunda iteración ——————
+   // —————— Segunda iteración ——————
+
   secondUserMessage   = userText;
   emotionDetected2    = emotion;
   emotionEmbedding2   = embedding;
@@ -457,22 +459,19 @@
 
   const recommendResult = await callLLMRecommend(payload);
   response              = recommendResult.response;
-  urls = recommendResult.urls;
+  urls                  = recommendResult.urls;
 
-  // **Quitamos “thinking” y mostramos YA la respuesta del LLM**:
   removeTypingIndicator();
   appendMessage(response, 'bot');
   if (urls && urls.length > 0) {
-    urls.forEach(url => {
-      appendMessage(url, 'bot');
-    });
+    urls.forEach(url => appendMessage(url, 'bot'));
   }
 
-  // **Marcamos fin de segunda iteración** y deshabilitamos input/botón
   botResponses++;
   sendButton.disabled = true;
   input.disabled      = true;
   resetButton.style.animation = "pulse-glow 2s infinite";
+  
 }
 
   function resetChat() {
@@ -495,10 +494,10 @@
   }
 
   // —————— Llamadas al backend ——————
-  async function detectEmotion(msg) {
+  async function detectEmotion(msg, inputNumber=2) {
     const res = await fetch('http://localhost:5000/api/emotion', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ message: msg })
+      body: JSON.stringify({ message: msg, input_number: inputNumber})  //se pasa inputNumber para saber qué prompt es
     });
     const { emotion, embedding } = await res.json();
     return { emotion, embedding };

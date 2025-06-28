@@ -84,33 +84,44 @@ def detect_emotion():
     try:
         data = request.get_json(force=True)
         message = data.get("message", "")
-        
+        input_number = data.get("input_number", 1)  # nuevo parámetro para saber si es input 1 o 2
+
+        # Selección de procesamiento según el tipo de input
         if BACKEND == "gpt4o-mini":
-            
-            translated_message = asyncio.run(generate_translation(message))
-            print(f"Orginal message (turn 1): {message}")
-            print(f"Translated message (turn 1): {translated_message}")
+            if input_number == 2:
+                translated_message = asyncio.run(rewrite_as_emotion_statement(message))
+                print(f"Original message (turn 2): {message}")
+                print(f"Reformulated message (turn 2): {translated_message}")
+            else:
+                translated_message = asyncio.run(generate_translation(message))
+                print(f"Original message (turn 1): {message}")
+                print(f"Translated message (turn 1): {translated_message}")
         else:
             translated_message = message
 
+        # Detectar emociones (hasta 4 para tener backup si hay 'desire')
         emotional_embedding, emotions = detect_user_emotions(translated_message, n=3)
 
+
+        # Convertir embedding a lista
         if hasattr(emotional_embedding, "tolist"):
             embedding_list = emotional_embedding.tolist()
         else:
             embedding_list = emotional_embedding
+
         return jsonify({
             "emotion": emotions,
             "embedding": embedding_list
         }), 200
+
     except Exception as e:
         app.logger.exception("Error en /api/emotion:")
-        # Devuelve un fallback “neutral” pero con 200 OK y CORS header
         return jsonify({
             "emotion": "sad",
             "embedding": [],
             "error": str(e)
         }), 200
+
 
 @app.route('/api/reflect', methods=['POST'])
 def reflect():
@@ -151,11 +162,12 @@ def recommend():
 
 
         emotional_embedding_2, emotions_2 = detect_user_emotions(reformulated_ui2, n=3)
-        emo2 = emotions_2[0] if emotions_2 else "neutral"
+            
+        emo2 = emotions_2[0] if emotions_2 else "neutral"  #Lo de antes
 
         
         context_embedding_1 = get_context_embedding(ui1) #aca no estamos usando el translated que es como sacamos el embedding emocional!
-        context_embedding_2 = get_context_embedding(reformulated_ui2) #aca usamos reformulado?
+        context_embedding_2 = get_context_embedding(reformulated_ui2) 
 
 
         songs_ids = get_playlist_ids2_weighted(emotional_embedding_1, emotional_embedding_2,
@@ -164,8 +176,7 @@ def recommend():
                                                k=5, selection='best', n=1)
 
     
-        
-
+    
         urls = get_playlist_link(spotify_token, songs_ids)
         response      = generate_recommendation(ui1, ui2, br1, emo1, emo2, song="")
         return jsonify({
