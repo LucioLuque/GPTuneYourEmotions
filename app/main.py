@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from app.backend_factory import generate_reflection, generate_recommendation
 from chatbots.GPT4omini import generate_translation, rewrite_as_emotion_statement
-from emotions.emotions import detect_user_emotions, get_playlist_ids, get_playlist_ids2, get_playlist_ids3, get_playlist_ids4, get_playlist_ids2_weighted
+from emotions.emotions import detect_user_emotions, get_playlist_ids2_weighted
 from context.context import get_context_embedding 
 from urllib import request as urllib_request
 import json
