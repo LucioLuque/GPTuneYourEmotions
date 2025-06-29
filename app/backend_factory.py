@@ -1,27 +1,3 @@
-"""
-Expone SIEMPRE dos funciones síncronas:
-    ▸ generate_reflection(msg: str) -> str
-    ▸ generate_recommendation(ui1, ui2, br1, emo1, emo2, song) -> str
-
-La implementación real depende de la variable de entorno BOT_BACKEND:
-    "flan"  → usa model.py (local)
-    "gpt4o" → usa GPT4omini.py (Azure, asíncrono)
-"""
-
-############################LEERR POR FAVOR ############################
-####### TINENE QUE PONER LA API Y COMO LLAMARON A SU MODELO EN DEPLOYMENT
-"""
-SE CORRE CON EL SIGUIENTE COMANDO EN TERMINAL PARA USAR GPT-4o-mini:
-export BOT_BACKEND=gpt4o
-export AZURE_OPENAI_ENDPOINT="https://nlp-openia-1.openai.azure.com/"
-export AZURE_OPENAI_API_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-export AZURE_OPENAI_DEPLOYMENT="NOMBRE DEL DEPLOYMENT"  # Ej: gpt-4o-mini
-
-python app.py
-
-"""
-
-
 import os, asyncio
 from emotions.emotions import detect_user_emotions  
 
