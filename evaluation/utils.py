@@ -10,7 +10,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join("../..", "emotions")))
-from emotions import detect_user_emotions, emotions_labels, data_embeddings, choose_ids, df, data_ids
+from emotions import detect_user_emotions, emotions_labels, emotional_data_embeddings,contextual_data_embeddings, df, data_ids
 
 def predict_one(text: str) -> str:
     """Devuelve la emoción top-1 de roBERTa."""
@@ -90,26 +90,27 @@ def align_predictions_with_labels(pred, real):
 
     return aligned_pred, aligned_real
 
-def get_lyrics(embedding_1):
-                 
-    """
-    """
-    if not isinstance(embedding_1, np.ndarray):
-        embedding_1 = np.array(embedding_1)
-    if embedding_1.ndim == 1:
-        embedding_1 = embedding_1.reshape(1, -1)
+def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray, weight_emotion = 0.4, weight_context = 0.6) -> str:
 
-    similarities = cosine_similarity(embedding_1, data_embeddings)[0]
+    """
+    """
+    if not isinstance(emotional_embedding, np.ndarray):
+        emotional_embedding = np.array(emotional_embedding)
+    if emotional_embedding.ndim == 1:
+        emotional_embedding = emotional_embedding.reshape(1, -1)
+
+    if not isinstance(contextual_embedding, np.ndarray):
+        contextual_embedding = np.array(contextual_embedding)
+    if contextual_embedding.ndim == 1:
+        contextual_embedding = contextual_embedding.reshape(1, -1)
+
+    emotion_similarities = cosine_similarity(emotional_embedding, emotional_data_embeddings)[0]
+    contextual_similarities = cosine_similarity(contextual_embedding, contextual_data_embeddings)[0]
+
+    combined_similarities = (weight_emotion * emotion_similarities) + (weight_context * contextual_similarities)
     #get the most similar song without choose_ids, only the best match
-    best_idx = np.argmax(similarities)
+    best_idx = np.argmax(combined_similarities)
     #its only one get_song
-    closest_id = data_ids[best_idx]
-    lyrics = df.loc[df["id"] == closest_id, "lyrics"].iat[0]
+    best_id = data_ids[best_idx]
+    lyrics = df.loc[df["id"] == best_id, "lyrics"].iat[0]
     return lyrics
-
-
-
-    # closest_idxs = choose_ids(similarities, k, selection, m, mode, n)
-    # closest_id = [data_ids[idx] for idx in closest_idxs]
-    # song = df[df["id"].isin(closest_id)]["lyrics"].values.tolist()
-    # return song
