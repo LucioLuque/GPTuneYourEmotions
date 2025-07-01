@@ -11,7 +11,6 @@ EMOTIONAL_EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_embeddings.npy")
 DATASET_PATH = os.path.join(ROOT_DIR, "data", "dataset_with_embeddings.csv")
 CONTEXTUAL_EMBEDDINGS_PATH = os.path.join(ROOT_DIR, "data", "all_context_embeddings.npy")
 
-
 tokenizer = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
 model     = AutoModelForSequenceClassification.from_pretrained("SamLowe/roberta-base-go_emotions")
 model.eval()
@@ -114,7 +113,6 @@ def get_available_indexes(sorted_indexes, used_indexes, m):
                 break
     return available
 
-
 def choose_ids(similarities, k, selection='best', m=1, 
                mode='constant', n=1):
     #hacer funcion de chequeos
@@ -174,8 +172,6 @@ def get_playlist_ids(embedding_1, embedding_2, genres=[], k=2, selection = 'best
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids
 
-
-
 #filtrar por emociones y luego por contexto
 def get_playlist_ids2(emotional_emb1, emotional_emb2, contextual_emb1, contextual_emb2,  genres=[], k=2, selection = 'best', m=1, mode='constant', n=1):
                  
@@ -202,12 +198,9 @@ def get_playlist_ids2(emotional_emb1, emotional_emb2, contextual_emb1, contextua
     closest_idxs = choose_ids_dual_filter(emotional_similarities, contextual_mid_points, k,
                                           selection=selection, m=m, mode=mode, n=n)
     
-
-
     print(f"Amount of songs selected: {len(closest_idxs)}")
     closest_ids = [data_ids[idx] for idx in closest_idxs]
     return closest_ids
-
 
 def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='best', m=1, mode='constant', n=1):
     chosen_ids = []
@@ -258,9 +251,6 @@ def choose_ids_dual_filter(emotional_sims, contextual_midpoints, k, selection='b
 
     return chosen_ids
 
-
-
-
 def get_playlist_ids2_weighted(emotional_emb1,emotional_emb2,contextual_emb1, contextual_emb2, genres=[], k=2, weight_emotion=0.7, weight_context=0.3,selection='best', n=1):
     # 1) Convertir a numpy si hace falta
     for arr in (emotional_emb1, emotional_emb2, contextual_emb1, contextual_emb2):
@@ -278,8 +268,6 @@ def get_playlist_ids2_weighted(emotional_emb1,emotional_emb2,contextual_emb1, co
                                       selection, n)
     print(f"Amount of songs selected: {len(chosen_idxs)}")
     return [data_ids[i] for i in chosen_idxs]
-
-
 
 def choose_ids_weighted(emo_sims, ctx_sims, k,
                         w_emo, w_ctx,
