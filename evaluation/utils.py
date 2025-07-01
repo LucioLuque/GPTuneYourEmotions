@@ -45,7 +45,7 @@ def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
 def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, save=True):
     """Dibuja y guarda una matriz de confusión."""
     plt.figure(figsize=(11, 9))
-    sns.heatmap(cm, annot=False, fmt=".2f", cmap="Blues", vmax=vmax,
+    sns.heatmap(cm, annot=False, fmt=".2f", cmap="Greens", vmax=vmax,
                 xticklabels=labels, yticklabels=labels)
     plt.title(title)
     plt.xlabel("Predicted")
