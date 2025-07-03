@@ -12,6 +12,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join("../..", "emotions")))
 from emotions import detect_user_emotions, emotions_labels, emotional_data_embeddings,contextual_data_embeddings, df, data_ids
 
+def print_header():
+    print(df.head())
+
 def predict_one(text: str) -> str:
     """Devuelve la emoción top-1 de roBERTa."""
     return detect_user_emotions(text, n=1)[1][0]

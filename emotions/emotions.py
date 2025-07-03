@@ -23,6 +23,8 @@ _mask = np.arange(len(id2label)) != neutral_idx
 emotional_data_embeddings = np.load(EMOTIONAL_EMBEDDINGS_PATH)
 df = pd.read_csv(DATASET_PATH)
 data_ids = df["id"]
+lyrics_by_id = dict(zip(df["id"], df["lyrics"]))  #agregado
+
 
 filtered_labels = {
     new_i: id2label[old_i]
@@ -267,6 +269,7 @@ def get_playlist_ids2_weighted(emotional_emb1,emotional_emb2,contextual_emb1, co
                                       weight_emotion, weight_context,
                                       selection, n)
     print(f"Amount of songs selected: {len(chosen_idxs)}")
+
     return [data_ids[i] for i in chosen_idxs]
 
 def choose_ids_weighted(emo_sims, ctx_sims, k,
@@ -280,6 +283,9 @@ def choose_ids_weighted(emo_sims, ctx_sims, k,
     chosen = []
     used = set()
 
+    # Filtrar IDs válidos por cantidad de palabras en la letra
+    MIN_WORDS = 50
+
     for i in range(k):
         # 1) Score combinado
         combined = w_emo * emo_sims[i] + w_ctx * ctx_sims[i]
@@ -290,6 +296,13 @@ def choose_ids_weighted(emo_sims, ctx_sims, k,
         #    filtrar los ya usados
         if used:
             sorted_idxs = [idx for idx in sorted_idxs if idx not in used]
+
+        sorted_idxs = [
+            idx for idx in sorted_idxs
+            if data_ids[idx] in lyrics_by_id and
+            isinstance(lyrics_by_id[data_ids[idx]], str) and
+            len(lyrics_by_id[data_ids[idx]].strip().split()) >= MIN_WORDS
+            ]
 
         # 4) Selección final
         if selection == 'best':
