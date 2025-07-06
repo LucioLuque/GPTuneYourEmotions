@@ -28,6 +28,12 @@ TEMPLATES_ES = [
 ]
 
 def make_pairs(n_pairs: int = 100, pct_en: float = 0.8):
+    """
+    Generates pairs of prompts based on emotion templates.
+    --------
+    Returns:
+        list: A list of tuples containing prompt_1, prompt_2, emo_1, and emo_2.
+    """
     pairs = []
     for _ in range(n_pairs):
         emo1, emo2 = random.sample(EMOTIONS, 2)
@@ -49,13 +55,22 @@ def make_pairs(n_pairs: int = 100, pct_en: float = 0.8):
         pairs.append((p1, p2, emo1, emo2))
     return pairs
 
+
 def main():
+    """
+    Generates a CSV file containing test prompts and their associated emotions.
+    --------
+    Creates:
+        test_prompts.csv: A CSV file with columns prompt_1, prompt_2, emo_1, and emo_2.
+    """
     out = pathlib.Path("test_prompts.csv")
     with out.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["prompt_1", "prompt_2", "emo_1", "emo_2"])
         writer.writerows(make_pairs())
     print(f"✓ Saved {out.absolute()}")
+
+
 
 if __name__ == "__main__":
     main()

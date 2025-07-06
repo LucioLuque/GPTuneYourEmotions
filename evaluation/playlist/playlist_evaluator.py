@@ -1,25 +1,11 @@
-#!/usr/bin/env python3
-"""
-Evalúa la calidad de las playlists que genera tu recomendador
-usando GPT-4 Turbo de Azure. NO depende de la API de Spotify.
-
-Requisitos:
-  • generate_test_prompts.py         (ya creado)
-  • evaluation/recommender_wrapper.py (convierte prompts → track_ids)
-  • eval_prompt.txt                  (rúbrica JSON)
-  • data/credentials.env             con:
-        AZURE_ENDPOINT
-        AZURE_KEY
-        DEPLOY_GPT4
-"""
-
 import os, json, csv, asyncio, pathlib, importlib, sys
 from typing import List
-
-
+import csv
 import pandas as pd
 from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
+from emotions import detect_user_emotions, get_playlist_ids2_weighted
+from context import get_context_embedding 
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
 DOTENV_PATH = PROJECT_ROOT / "data" / "credentials.env"
@@ -36,8 +22,6 @@ AZURE_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
 AZURE_KEY      = os.environ["AZURE_OPENAI_API_KEY"]
 DEPLOY_GPT4    = os.environ["AZURE_GPT4_DEPLOYMENT"]
 
-from emotions import detect_user_emotions, get_playlist_ids2_weighted
-from context import get_context_embedding 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
@@ -54,8 +38,19 @@ client = AsyncAzureOpenAI(
 
 EVAL_PROMPT_SYS = PROMPT_FILE.read_text()
 
-# ────────── Build GPT messages (sin Spotify) ──────────
+
 def build_eval_messages(p1: str, p2: str, track_ids: List[str]) -> list:
+    """
+    Builds GPT messages for playlist evaluation using Spotify track links.
+    --------
+    Args:
+        p1 (str): The current emotion message provided by the user.
+        p2 (str): The desired emotion message specified by the user.
+        track_ids (List[str]): List of track IDs to include in the playlist.
+    --------
+    Returns:
+        list: A list of GPT messages formatted for playlist evaluation.
+    """
     playlist_lines = [
         f"{i}. https://open.spotify.com/track/{tid}"
         for i, tid in enumerate(track_ids, 1)
@@ -70,6 +65,17 @@ def build_eval_messages(p1: str, p2: str, track_ids: List[str]) -> list:
     ]
 
 async def score_playlist(p1: str, p2: str, track_ids: List[str]) -> dict:
+    """
+    Scores a playlist based on the given prompts and track IDs.
+    --------
+    Args:
+        prompt_1 (str): The first user prompt.
+        prompt_2 (str): The second user prompt.
+        track_ids (list): List of track IDs to evaluate.
+    --------
+    Returns:
+        dict: A dictionary containing scores, overall appeal, etc.
+    """
     messages = build_eval_messages(p1, p2, track_ids)
     rsp = await client.chat.completions.create(
         model=DEPLOY_GPT4,
@@ -79,96 +85,44 @@ async def score_playlist(p1: str, p2: str, track_ids: List[str]) -> dict:
     )
     return json.loads(rsp.choices[0].message.content)
 
-async def evaluate_playlists(prompts: list, weight_emotion=0.4, weight_context=0.6, n_tracks_max=11) -> pd.DataFrame:
-    """
-    Evalúa las playlists generadas a partir de una lista de prompts.
-    
-    Args:
-        prompts (list): Lista de diccionarios con "prompt_1" y "prompt_2".
-        weight_emotion (float): Peso para los embeddings emocionales.
-        weight_context (float): Peso para los embeddings contextuales.
-        n_tracks_max (int): Número máximo de canciones en la playlist.
-
-    Returns:
-        pd.DataFrame: Resultados de la evaluación.
-    """
-    outputs = []
-    for row in prompts:
-        p1, p2 = row["prompt_1"], row["prompt_2"]
-
-        # Generar embeddings emocionales y contextuales
-        emb1, _ = detect_user_emotions(p1, n=3)
-        emb2, _ = detect_user_emotions(p2, n=3)
-        context_embedding_1 = get_context_embedding(p1)
-        context_embedding_2 = get_context_embedding(p2)
-
-        # Generar IDs de la playlist con pesos personalizados
-        track_ids = get_playlist_ids2_weighted(
-            emb1, emb2,
-            context_embedding_1, context_embedding_2,
-            genres=[],              # sin filtros
-            k=7, selection='best', n=1
-        )[:n_tracks_max]
-
-        # Evaluar la playlist con GPT-4
-        result = await score_playlist(p1, p2, track_ids)
-        outputs.append({
-            **row,
-            "track_ids": track_ids,
-            **result["scores"],
-            "overall": result["overall"],
-            "rationale": result["rationale"]
-        })
-        print(f"✓ {p1[:35]}… → {result['overall']}")
-
-    return pd.DataFrame(outputs)
 
 
-
-# ───────────── Batch runner ─────────────
-import os
-import csv
-import pandas as pd
-
-# ───────────── Batch runner ─────────────
 async def batch_run(csv_path: str, output_dir="output_results"):
-    # Crear la carpeta de salida si no existe
+    """
+    Processes prompts from a CSV file and generates playlists for each combination of weights.
+    --------
+    Args:
+        csv_path (str): Path to the input CSV file containing prompts.
+        output_dir (str): Directory to save the generated CSV files.
+    --------
+    Returns:
+        None
+    """
     os.makedirs(output_dir, exist_ok=True)
 
-    # Leer las filas del archivo CSV
     rows = []
     with open(csv_path, newline='', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
 
-    #rows = rows[:20]  # Tomar el primer décimo de las filas
+    WEIGHTS = [ (0.25, 0.75), (0.5, 0.5), (0.75, 0.25)]
 
-    # Lista de pesos para emoción y contexto
-    WEIGHTS = [
-        (0.5, 0.5),
-    ]
-
-    # Iterar sobre cada combinación de pesos
     for emotion_weight, context_weight in WEIGHTS:
         outputs = []
         for row in rows:
             p1, p2 = row["prompt_1"], row["prompt_2"]
 
-            # Obtener embeddings y contexto
+            # Obtain embeddings for the prompts
             emb1, _ = detect_user_emotions(p1, n=3)
             emb2, _ = detect_user_emotions(p2, n=3)
             context_embedding_1 = get_context_embedding(p1)
             context_embedding_2 = get_context_embedding(p2)
 
-            # Generar IDs de pistas con los pesos actuales
-            track_ids = get_playlist_ids2_weighted(
-                emb1, emb2,
-                context_embedding_1, context_embedding_2,
-                genres=[],              # sin filtros
-                k=7, selection='best', n=1,  # → 11 canciones
-                weight_emotion=emotion_weight, weight_context=context_weight
-            )[:N_TRACKS_MAX]
+    
+            track_ids = get_playlist_ids2_weighted( emb1, emb2, context_embedding_1, context_embedding_2,
+                genres=[], k=7, selection='best', n=1, weight_emotion=emotion_weight, 
+                weight_context=context_weight)[:N_TRACKS_MAX]
 
-            # Evaluar la playlist
+            # Evaluate the playlist with GPT-4
             result = await score_playlist(p1, p2, track_ids)
             outputs.append({
                 **row,
@@ -179,13 +133,14 @@ async def batch_run(csv_path: str, output_dir="output_results"):
             })
             print(f"✓ {p1[:35]}… → {result['overall']}")
 
-        # Guardar resultados como CSV
+        # Save results to CSV
         filename = f"weights_{emotion_weight}_{context_weight}.csv"
         output_path = os.path.join(output_dir, filename)
         pd.DataFrame(outputs).to_csv(output_path, index=False)
         print(f"✓ Saved {output_path}")
 
-# ────────────── CLI ──────────────
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -197,15 +152,4 @@ if __name__ == "__main__":
 
     asyncio.run(batch_run(args.batch, args.out))
 
-# ────────────── CLI ──────────────
-if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--batch", default="/home/bryan/Documentos/GitHub/GPTuneYourEmotions/evaluation/playlist/test_prompts.csv",
-                        help="CSV con prompt_1, prompt_2…")
-    parser.add_argument("--out", default="evaluation.playlist.results.csv")
-    args = parser.parse_args()
-
-
-    asyncio.run(batch_run(args.batch, args.out))

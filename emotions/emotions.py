@@ -272,9 +272,7 @@ def get_playlist_ids2_weighted(emotional_emb1,emotional_emb2,contextual_emb1, co
 
     return [data_ids[i] for i in chosen_idxs]
 
-def choose_ids_weighted(emo_sims, ctx_sims, k,
-                        w_emo, w_ctx,
-                        selection='best', n=1):
+def choose_ids_weighted(emo_sims, ctx_sims, k, w_emo, w_ctx, selection='best', n=1):
     """
     Para cada uno de los k mid-points, calcula la similitud combinada
     y selecciona las n canciones con mayor score (o muestra aleatoria
@@ -283,32 +281,24 @@ def choose_ids_weighted(emo_sims, ctx_sims, k,
     chosen = []
     used = set()
 
-    # Filtrar IDs válidos por cantidad de palabras en la letra
     MIN_WORDS = 50
 
     for i in range(k):
-        # 1) Score combinado
-        combined = w_emo * emo_sims[i] + w_ctx * ctx_sims[i]
-        # 2) Orden de mayor a menor
+        
+        combined = w_emo * emo_sims[i] + w_ctx * ctx_sims[i] # combined score
+
         sorted_idxs = np.argsort(combined)[::-1]
 
-        # 3) Si no quieres repetir canciones entre puntos:
-        #    filtrar los ya usados
         if used:
             sorted_idxs = [idx for idx in sorted_idxs if idx not in used]
 
-        sorted_idxs = [
-            idx for idx in sorted_idxs
-            if data_ids[idx] in lyrics_by_id and
-            isinstance(lyrics_by_id[data_ids[idx]], str) and
-            len(lyrics_by_id[data_ids[idx]].strip().split()) >= MIN_WORDS
-            ]
+        sorted_idxs = [ idx for idx in sorted_idxs if data_ids[idx] in lyrics_by_id and
+            isinstance(lyrics_by_id[data_ids[idx]], str) and len(lyrics_by_id[data_ids[idx]].strip().split()) >= MIN_WORDS]
 
-        # 4) Selección final
+
         if selection == 'best':
             pick = sorted_idxs[:n]
         elif selection == 'random':
-            # tomar muestra aleatoria de las top-(n*2) para tener variedad
             top_pool = sorted_idxs[: n*2 ]
             if len(top_pool) < n:
                 raise ValueError(f"Pocos candidatos: {len(top_pool)} disponibles, {n} requeridos.")

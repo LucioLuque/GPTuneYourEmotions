@@ -5,6 +5,11 @@
 !evaluation/sentiment/lyrics_sample.csv
 !evaluation/sentiment/eval_lyrics_labels.csv
 !evaluation/songs/songs_results/*.csv
+!evaluation/playlist/output_results/weights_wemo0.5_wctx0.5.csv
+!evaluation/playlist/output_results/weights_wemo0.25_wctx0.75.csv
+!evaluation/playlist/output_results/weights_wemo0.75_wctx0.25.csv
+!evaluation/playlist/test_prompts.csv
+
 # Ignorar archivos NPY (NumPy)
 *.npy
 

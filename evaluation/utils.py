@@ -12,23 +12,57 @@ import sys
 sys.path.append(os.path.abspath(os.path.join("../..", "emotions")))
 from emotions import detect_user_emotions, emotions_labels, emotional_data_embeddings,contextual_data_embeddings, df, data_ids
 
-def print_header():
-    print(df.head())
 
 def predict_one(text: str) -> str:
-    """Devuelve la emoción top-1 de roBERTa."""
+    """
+    Predicts the top-1 emotion for a given text using the roBERTa model.
+    --------
+    Args:
+        text (str): The input text for emotion detection.
+    --------
+    Returns:
+        str: The top-1 predicted emotion label.
+    """
     return detect_user_emotions(text, n=1)[1][0]
 
 def predict_two(text: str) -> str:
-    """Devuelve las emociones top-2 de roBERTa."""
+    """
+    Predicts the top-2 emotions for a given text using the roBERTa model.
+    --------
+    Args:
+        text (str): The input text for emotion detection.
+    --------
+    Returns:
+        str: The top-2 predicted emotions label.
+    """
     return detect_user_emotions(text, n=2)[1]
 
 def get_emotional_embedding(text: str) -> np.ndarray:
-    """Devuelve la representación emocional de un texto."""
+    """
+    Generates the emotional embedding for a given text.
+    --------
+    Args:
+        text (str): Input text to analyze.
+    --------
+    Returns:
+        np.ndarray: Emotional embedding vector.
+    """
     return detect_user_emotions(text, n=1)[0]
 
 def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
-    """Carga (o construye) la matriz de similitud entre emociones."""
+    """
+    Loads or constructs the similarity matrix between emotions.
+    --------
+    Args:
+        path (str): Path to the similarity matrix file (default: "emotion_similarity.npy").
+    --------
+    Returns:
+        np.ndarray: A 2D numpy array representing the similarity matrix.
+    --------
+    Notes:
+        If the file exists, it loads the matrix from the file.
+        Otherwise, it constructs the matrix using embeddings from the roBERTa model.
+    """
     if os.path.exists(path):
         return np.load(path)
     tokenizer   = AutoTokenizer.from_pretrained("SamLowe/roberta-base-go_emotions")
@@ -46,7 +80,20 @@ def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
     return S
 
 def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, save=True):
-    """Dibuja y guarda una matriz de confusión."""
+    """
+    Plots and saves a confusion matrix as a heatmap.
+    --------
+    Args:
+        cm (np.ndarray): The confusion matrix to plot.
+        labels (list): List of labels for the axes.
+        title (str): Title of the plot.
+        fname (str): File path to save the plot.
+        vmax (float): Maximum value for the color scale (default: 1.0).
+    --------
+    Returns:
+        None
+    """
+
     plt.figure(figsize=(11, 9))
     sns.heatmap(cm, annot=False, fmt=".2f", cmap="Greens", vmax=vmax,
                 xticklabels=labels, yticklabels=labels)
@@ -64,8 +111,19 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, sav
 
 def align_predictions_with_labels(pred, real):
     """
-    Reordena las emociones predichas y reales para que las emociones coincidentes estén en el mismo índice.
-    Si ambas predicciones coinciden exactamente con las etiquetas reales, se mantiene el orden original.
+    Aligns predicted emotions with real emotions such that matching emotions are at the same index.
+    If both predictions exactly match the real labels, the original order is preserved.
+    --------
+    Args:
+        pred (list): List of predicted emotions.
+        real (list): List of real emotions.
+    --------
+    Returns:
+        tuple: Two lists, aligned predictions and aligned real emotions.
+    --------
+    Notes:
+        - Matching emotions are placed at the same index.
+        - Remaining emotions are assigned to the next available indices.
     """
     # Si ambas predicciones coinciden exactamente con las etiquetas reales, mantener el orden
     if set(pred) == set(real):
@@ -94,9 +152,23 @@ def align_predictions_with_labels(pred, real):
     return aligned_pred, aligned_real
 
 def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray, weight_emotion = 0.4, weight_context = 0.6) -> str:
+    """
+    Retrieves the lyrics of the song that best matches the given emotional and contextual embeddings.
+    --------
+    Args:
+        emotional_embedding (np.ndarray): Emotional embedding vector.
+        contextual_embedding (np.ndarray): Contextual embedding vector.
+        weight_emotion (float): Weight for emotional similarity (default: 0.4).
+        weight_context (float): Weight for contextual similarity (default: 0.6).
+    --------
+    Returns:
+        str: Lyrics of the best matching song.
+    --------
+    Notes:
+        - Combines emotional and contextual similarities using weighted cosine similarity.
+        - Selects the song with the highest combined similarity score.
+    """
 
-    """
-    """
     if not isinstance(emotional_embedding, np.ndarray):
         emotional_embedding = np.array(emotional_embedding)
     if emotional_embedding.ndim == 1:
@@ -111,9 +183,8 @@ def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray
     contextual_similarities = cosine_similarity(contextual_embedding, contextual_data_embeddings)[0]
 
     combined_similarities = (weight_emotion * emotion_similarities) + (weight_context * contextual_similarities)
-    #get the most similar song without choose_ids, only the best match
+    # Get the index of the best matching song
     best_idx = np.argmax(combined_similarities)
-    #its only one get_song
     best_id = data_ids[best_idx]
     lyrics = df.loc[df["id"] == best_id, "lyrics"].iat[0]
     return lyrics

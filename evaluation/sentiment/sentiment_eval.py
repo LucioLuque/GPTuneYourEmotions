@@ -10,11 +10,31 @@ RESULTS_STORAGE_PATH = os.path.join(os.path.dirname(__file__), "sentiment_result
 BASE_DIR = os.path.dirname(__file__)
 
 def predict_one(text: str) -> str:
-    """Devuelve la emoción top-1 de roBERTa."""
+    """
+    Predicts the top-1 emotion for a given text using the roBERTa model.
+    --------
+    Args:
+        text (str): The input text for emotion detection.
+    --------
+    Returns:
+        str: The top-1 predicted emotion label.
+    """
     return detect_user_emotions(text, n=1)[1][0]
 
 def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
-    """Carga (o construye) la matriz de similitud entre emociones."""
+    """
+    Loads or constructs the similarity matrix between emotions.
+    --------
+    Args:
+        path (str): Path to the similarity matrix file (default: "emotion_similarity.npy").
+    --------
+    Returns:
+        np.ndarray: A 2D numpy array representing the similarity matrix.
+    --------
+    Notes:
+        If the file exists, it loads the matrix from the file.
+        Otherwise, it constructs the matrix using embeddings from the roBERTa model.
+    """
     if os.path.exists(path):
         return np.load(path)
 
@@ -24,7 +44,7 @@ def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
     ).eval()
 
     @torch.no_grad()
-    def embed(sentence):
+    def embed(sentence): # Generates an embedding for a given sentence using the roBERTa model
         out = model(**tok(sentence, return_tensors="pt"))
         cls = out.last_hidden_state[:, 0, :]
         return torch.nn.functional.normalize(cls, dim=-1).squeeze()
@@ -35,7 +55,20 @@ def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
     return S
 
 def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0):
-    """Dibuja y guarda una matriz de confusión."""
+    """
+    Plots and saves a confusion matrix as a heatmap.
+    --------
+    Args:
+        cm (np.ndarray): The confusion matrix to plot.
+        labels (list): List of labels for the axes.
+        title (str): Title of the plot.
+        fname (str): File path to save the plot.
+        vmax (float): Maximum value for the color scale (default: 1.0).
+    --------
+    Returns:
+        None
+    """
+    
     plt.figure(figsize=(11, 9))
     sns.heatmap(cm, annot=False, fmt=".2f", cmap="Blues", vmax=vmax,
                 xticklabels=labels, yticklabels=labels)
