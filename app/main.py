@@ -85,17 +85,26 @@ def detect_emotion():
         data = request.get_json(force=True)
         message = data.get("message", "")
         input_number = data.get("input_number", 1)  # nuevo parámetro para saber si es input 1 o 2
-
+        print(f"Input number: {input_number}")
         # Selección de procesamiento según el tipo de input
         if BACKEND == "gpt4o-mini":
+            # if input_number == 2:
+            #     translated_message = asyncio.run(rewrite_as_emotion_statement(message))
+            #     print(f"Original message (turn 2): {message}")
+            #     print(f"Reformulated message (turn 2): {translated_message}")
+            # else:
+            #     translated_message = asyncio.run(generate_translation(message))
+            #     print(f"Original message (turn 1): {message}")
+            #     print(f"Translated message (turn 1): {translated_message}")
+            translated_message = asyncio.run(generate_translation(message))
+            print(f"Original message (turn 1): {message}")
+            print(f"Translated message (turn 1): {translated_message}")
             if input_number == 2:
-                translated_message = asyncio.run(rewrite_as_emotion_statement(message))
-                print(f"Original message (turn 2): {message}")
+                message2=translated_message
+                translated_message = asyncio.run(rewrite_as_emotion_statement(message2))
+                print(f"Original message (turn 2): {message2}")
                 print(f"Reformulated message (turn 2): {translated_message}")
-            else:
-                translated_message = asyncio.run(generate_translation(message))
-                print(f"Original message (turn 1): {message}")
-                print(f"Translated message (turn 1): {translated_message}")
+
         else:
             translated_message = message
 

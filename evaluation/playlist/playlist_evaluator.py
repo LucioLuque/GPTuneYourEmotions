@@ -140,7 +140,7 @@ async def batch_run(csv_path: str, output_dir="output_results"):
     with open(csv_path, newline='', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
 
-    rows = rows[:20]  # Tomar el primer décimo de las filas
+    #rows = rows[:20]  # Tomar el primer décimo de las filas
 
     # Lista de pesos para emoción y contexto
     WEIGHTS = [
