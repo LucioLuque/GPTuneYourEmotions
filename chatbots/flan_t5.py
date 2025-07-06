@@ -12,17 +12,17 @@ few_shot_prompt = (
     "User: Everything just feels out of control lately, and I don’t know how to handle it.\n"
     "Detected emotion: helplessness\n"
     "Song to recommend: Fix You - Coldplay\n"
-    "Assistant: I'm really sorry you're feeling this way. Feeling helpless can be incredibly overwhelming, but you're not alone in this. 'Fix You' by Coldplay has a gentle, uplifting tone that might help you process your feelings and remind you that things can improve.\n\n"
+    "Assistant: I'm really sorry you're feeling this way. Feeling helpless can be incredibly overwhelming, but you're not alone in this. Here is a playlist that might help you through this tough time."
 
     "User: I’ve been reminiscing about the past a lot today, missing how things used to be.\n"
     "Detected emotion: nostalgia\n"
     "Song to recommend: The Night We Met - Lord Huron\n"
-    "Assistant: It’s completely natural to feel nostalgic, especially when memories bring both joy and sadness. Allow yourself to sit with those feelings and honor them. 'The Night We Met' by Lord Huron beautifully captures that bittersweet sense of longing and may resonate with you right now.\n\n"
+    "Assistant: It’s completely natural to feel nostalgic, especially when memories bring both joy and sadness. Allow yourself to sit with those feelings and honor them. Here is a playlist that captures that sense of longing and reflection, which might help you process those emotions."
 
     "User: I feel optimistic today, like maybe things are finally turning around.\n"
     "Detected emotion: hopefulness\n"
     "Song to recommend: Here Comes the Sun - The Beatles\n"
-    "Assistant: That’s such a wonderful feeling to have—hold onto it. Hope is a powerful motivator and a sign of your resilience. 'Here Comes the Sun' by The Beatles is a bright, uplifting song that can help you savor that sense of renewal.\n\n"
+    "Assistant: That’s such a wonderful feeling to have—hold onto it. Hope is a powerful motivator and a sign of your resilience. Here is a playlist that can help you savor that sense of renewal.\n\n"
 )
 
 
@@ -48,7 +48,7 @@ def generate_reflection(user_message, emo="sad"):
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
-def generate_recommendation(user_input_1, user_input_2, bot_response_1, actual_emotion, desired_emotion, song="Fix You - Coldplay"):
+def generate_recommendation(user_input_1, user_input_2, bot_response_1, actual_emotion, desired_emotion):
     final_prompt = (
         few_shot_prompt +
         f"User: {user_input_1}\n"
@@ -56,7 +56,6 @@ def generate_recommendation(user_input_1, user_input_2, bot_response_1, actual_e
         f"Bot: {bot_response_1}\n"
         f"User: {user_input_2}\n"
         f"Desired emotion: {desired_emotion}\n"
-        f"Song to recommend: {song}\n"
         "Assistant:"
     )
     inputs = tokenizer(final_prompt, return_tensors="pt")

@@ -30,3 +30,18 @@ python run.py gpt4o-mini
 If no argument is provided, the script defaults to `flan`.
 
 ---
+
+## ⚠️ Important Notes
+
+- **FLAN Mode**: The application does not work properly in the FLAN environment. It is recommended to run it locally.
+
+- **Local visualization**: To correctly view the frontend (`index.html`), it is recommended to use the **"Live Server" extension in VS Code** and click on **"Go Live"** to launch the local server.
+
+- **Spotify registration (within the app)**:  
+  To test the Spotify sign-up functionality, your account must first be registered in the app’s development environment.  
+  Please send an email with your **full name** and the **email associated with your Spotify account** to any of the following addresses:
+
+  - lluquematerazzi@udesa.edu.ar  
+  - cguerrero@udesa.edu.ar  
+  - tkaucher@udesa.edu.ar  
+  - bdrexler@udesa.edu.ar

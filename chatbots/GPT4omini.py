@@ -106,7 +106,6 @@ async def generate_reflection(user_message: str, detected_emotion: str) -> str:
 
 async def generate_recommendation(
     history: list,
-    song_title: str,
     current_emotion: str,
     desired_emotion: str
 ) -> str:
