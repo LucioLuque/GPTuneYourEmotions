@@ -11,6 +11,10 @@ AZURE_OPENAI_DEPLOYMENT=your_deployment_name
 
 > ⚠️ **Important:** Do not include quotes (`"`) around the values. Each line must follow the format `KEY=VALUE` with no spaces around the `=` sign.
 
+If you want to run the evaluations you will aslo need to add the deployment for a gpt-4 model:
+```env
+AZURE_GPT4_DEPLOYMENT=your_deployment_name
+```
 ---
 
 ## ▶️ Running the Application
@@ -33,9 +37,9 @@ If no argument is provided, the script defaults to `flan`.
 
 ## ⚠️ Important Notes
 
-- **FLAN Mode**: The application does not work properly in the FLAN environment. It is recommended to run it locally.
+- **FLAN Mode**: The application does not work properly in the FLAN environment. It is recommended to use gpt4o-mini
 
-- **Local visualization**: To correctly view the frontend (`index.html`), it is recommended to use the **"Live Server" extension in VS Code** and click on **"Go Live"** to launch the local server.
+- **Local visualization**: To correctly view the frontend (`GPTuneYourEmotions.html`), it is recommended to use the **"Live Server" extension in VS Code** and click on **"Go Live"** to launch the local server.
 
 - **Spotify registration (within the app)**:  
   To test the Spotify sign-up functionality, your account must first be registered in the app’s development environment.  

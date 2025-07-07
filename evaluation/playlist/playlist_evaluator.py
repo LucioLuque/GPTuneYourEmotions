@@ -38,7 +38,6 @@ client = AsyncAzureOpenAI(
 
 EVAL_PROMPT_SYS = PROMPT_FILE.read_text()
 
-
 def build_eval_messages(p1: str, p2: str, track_ids: List[str]) -> list:
     """
     Builds GPT messages for playlist evaluation using Spotify track links.
@@ -85,7 +84,6 @@ async def score_playlist(p1: str, p2: str, track_ids: List[str]) -> dict:
     )
     return json.loads(rsp.choices[0].message.content)
 
-
 async def batch_run(csv_path: str, output_dir="output_results"):
     """
     Processes prompts from a CSV file and generates playlists for each combination of weights.
@@ -118,7 +116,7 @@ async def batch_run(csv_path: str, output_dir="output_results"):
 
     
             track_ids = get_playlist_ids_weighted( emb1, emb2, context_embedding_1, context_embedding_2,
-                genres=[], k=7, selection='best', n=1, weight_emotion=emotion_weight, 
+                 k=7, selection='best', n=1, weight_emotion=emotion_weight, 
                 weight_context=context_weight)[:N_TRACKS_MAX]
 
             # Evaluate the playlist with GPT-4
