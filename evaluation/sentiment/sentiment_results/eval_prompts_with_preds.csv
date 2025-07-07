@@ -1,0 +1,82 @@
+text,label,pred
+Your dedication to volunteering is truly inspiring.,admiration,admiration
+That joke about the cat wearing a tie made me laugh until I cried.,amusement,amusement
+I can't believe you deleted all my work without asking!,anger,surprise
+That drill noise at seven in the morning again—how annoying.,annoyance,annoyance
+"Great job, that refactor turned out flawless.",approval,admiration
+Let me know when you get home so I know you're safe.,caring,caring
+I don't understand why the router light is flashing red.,confusion,confusion
+How do black holes really work?,curiosity,curiosity
+I'm dying to try that new Japanese restaurant.,desire,desire
+I was expecting a raise and in the end I got nothing.,disappointment,disappointment
+It's not okay that you arrive so late without letting me know.,disapproval,disapproval
+The smell of rotten food was unbearable.,disgust,disgust
+I fell in front of everyone and felt myself blush.,embarrassment,realization
+We're going on a trip tomorrow—how exciting!,excitement,excitement
+I heard footsteps behind me on the dark street and got scared.,fear,fear
+Thank you for staying with me when I was sick.,gratitude,gratitude
+"Since my grandmother passed away, the house feels empty.",grief,sadness
+Everything went perfectly today; I feel incredibly happy.,joy,joy
+I adore you with all my heart.,love,love
+I've got knots in my stomach before the interview.,nervousness,sadness
+I'm sure next year will be even better.,optimism,optimism
+I submitted the project ahead of the deadline and feel proud.,pride,pride
+Now I see I was looking for answers in the wrong place.,realization,realization
+They took off the cast and I can finally walk without pain.,relief,approval
+I shouldn't have yelled at you; I'm really sorry.,remorse,remorse
+The constant rain makes me feel melancholic.,sadness,sadness
+"I didn't expect to see you here, what a surprise!",surprise,surprise
+Your perseverance in finishing that marathon left me speechless.,admiration,admiration
+Watching the penguin slide on its belly cracked me up.,amusement,amusement
+I'm furious that the package arrived completely broken.,anger,anger
+The endless clicking of that pen is driving me up the wall.,annoyance,excitement
+That's exactly the solution we needed—well done!,approval,admiration
+Take your coat; it's chilly and I don't want you catching a cold.,caring,caring
+I'm totally lost—why are there two different logins for the same site?,confusion,confusion
+I've always wondered what the surface of Mars smells like.,curiosity,surprise
+I really crave a steaming cup of hot chocolate right now.,desire,desire
+"I studied all week, but the exam covered none of the material.",disappointment,disappointment
+Leaving dirty dishes in the sink overnight isn't acceptable.,disapproval,disapproval
+The sight of mold growing on that bread makes my stomach churn.,disgust,fear
+My phone started playing loud music in the quiet library.,embarrassment,approval
+I just got tickets to my favorite band's reunion tour!,excitement,excitement
+The storm shook the windows so hard I thought they would shatter.,fear,fear
+I can't thank you enough for covering my shift yesterday.,gratitude,gratitude
+"Every corner of the house reminds me of him, and it hurts.",grief,sadness
+I can't stop smiling after getting that positive news.,joy,joy
+Being around you makes everything else fade away.,love,realization
+My hands are trembling before stepping onto the stage.,nervousness,fear
+"Even after the setback, I believe our best days are ahead.",optimism,optimism
+Seeing my artwork displayed in the gallery fills me with pride.,pride,admiration
+It suddenly dawned on me that I'd been reading the map upside down.,realization,realization
+"When the test results came back negative, I could finally breathe.",relief,disappointment
+I regret missing your birthday party; I should've prioritized better.,remorse,remorse
+The empty seat at dinner reminded me she's gone.,sadness,sadness
+You arranged all this just for me? I had no idea!,surprise,confusion
+Watching my sister patiently guide my nephew through his first steps left me amazed by her dedication.,admiration,admiration
+I just finished a comedy movie and found myself laughing out loud through the entire end credits.,amusement,amusement
+"I just returned to my desk and found my meticulously organized files shredded and scattered everywhere, and I was absolutely furious.",anger,anger
+The neighbor's car alarm blaring at sunrise grated on my nerves and ruined my morning.,annoyance,disappointment
+"After staying up all night finishing that report, hearing my manager praise my work in the morning convinced me i’d made the right call.",approval,approval
+"My brother felt terrible all night, so I stayed by his side and made sure he had everything he needed.",caring,caring
+Receiving an urgent call from my doctor asking me to come in immediately without any details left me completely uncertain about what was wrong.,confusion,confusion
+I just uncovered a major secret hidden in the archives and can’t stop wondering what else I’ll find.,curiosity,surprise
+I just watched that cooking show and I’m longing to try making that chocolate soufflé tonight.,desire,desire
+"I opened the email to see that tonight’s concert had been canceled, leaving me utterly let down.",disappointment,disappointment
+"I just found out the community center canceled the free cooking classes without telling me, and it felt unfair that they didn’t ask for my opinion.",disapproval,disappointment
+"I just took a bite of my sandwich and realized it had gone bad, making my stomach turn.",disgust,realization
+I just waved enthusiastically at someone who wasn’t waving at me and wanted to disappear on the spot.,embarrassment,joy
+I just found out my best friend is flying in for a surprise visit and I can’t stop smiling.,excitement,joy
+"I just got word my friend is driving here through this raging thunderstorm, and each crack of thunder sent a chill down my spine.",fear,fear
+"I came home after a long day to find my partner had cleaned up and cooked dinner, and it made me realize how lucky I am to have them.",gratitude,realization
+"I just found my grandmother’s favorite shawl tucked in her chair, and tears welled up as I remembered her warmth.",grief,sadness
+"I opened my inbox this morning to find I’d received my scholarship award, and I can’t stop grinning from ear to ear.",joy,joy
+"I woke up this morning to find a bouquet of flowers on my nightstand with a note that said ‘just because’, and my heart melted.",love,joy
+"I just sat down to record my podcast and realized I hadn’t rehearsed my opening lines, and I felt my palms grow clammy.",nervousness,realization
+I just watched the sunrise break through the clouds and felt sure today would bring new opportunities.,optimism,optimism
+I just saw my project showcased in the company newsletter and couldn’t help but beam at what I’d accomplished.,pride,excitement
+"I just found an old photo of my childhood home tucked away in a drawer, and it made me realize how far I’ve come.",realization,realization
+"I just got the call that my test results came back clear, and I felt a huge weight lift off my shoulders.",relief,joy
+I just reread the harsh message I sent my friend last night and felt a deep regret for how I spoke.,remorse,remorse
+"I just sat down for dinner and saw my father’s chair still empty, my heart ached and I can’t stop crying.",sadness,sadness
+"I just discovered a heartfelt letter from my childhood friend tucked inside an old book, and I was completely caught off guard.",surprise,surprise

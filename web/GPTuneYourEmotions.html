@@ -243,7 +243,7 @@
   </div>
 
   <script>
-  // —————— Variables y referencias DOM ——————
+  // Variables and DOM elements 
   const initialMessage = "How are you feeling today?";
   const chat         = document.getElementById('chat');
   const input        = document.getElementById('userInput');
@@ -261,27 +261,25 @@
   let emotionEmbedding1 = [];
   let emotionEmbedding2 = [];
 
-  // —————— Funciones de UI de login ——————
+  // UI functions
   function updateProfileIcon() {
     const loginWrapper = document.querySelector('.login-wrapper');
     const profileIcon  = document.getElementById("profileIcon");
     const savedImg     = localStorage.getItem("spotify_profile_img");
 
-    // Reset estilos básicos
+    // Reset styles
     profileIcon.style.borderRadius    = "50%";
     profileIcon.style.width           = "48px";
     profileIcon.style.height          = "48px";
     profileIcon.style.transition      = "opacity 0.3s ease";
 
-    // Habilitar o deshabilitar
     if (loginAllowed) {
       loginWrapper.classList.remove("login-disabled");
     } else {
       loginWrapper.classList.add("login-disabled");
     }
 
-    if (savedImg) {
-      // Usuario logueado → su foto, sin glow
+    if (savedImg) { // If user has logged in and saved an image
       profileIcon.style.animation       = "none";
       profileIcon.src                   = savedImg;
       profileIcon.alt                   = "Perfil Spotify";
@@ -289,8 +287,7 @@
       profileIcon.style.padding         = "0";
       profileIcon.style.backgroundColor = "transparent";
       profileIcon.style.boxShadow       = "0 0 10px #1DB954, 0 0 20px #1DB95455";
-    } else {
-      // Icono por defecto → glow sólo si está habilitado
+    } else { // Default icon if no image is saved
       profileIcon.src                   = "/static/loginlogo.png";
       profileIcon.alt                   = "Icono por defecto";
       profileIcon.style.objectFit       = "contain";
@@ -321,30 +318,26 @@
     menu.classList.toggle('hidden');
   }
 
-  // —————— Lógica de chat ——————
+  // Chat functions
   function appendMessage(text, sender, emotions = []) {
     const msg = document.createElement('div');
     msg.className = `message ${sender}`;
 
-    // Expresión regular simple para detectar si el string es un enlace Spotify
+    // If has a URL, create a clickable link
     const urlRegex = /^https?:\/\/.+$/i;
 
     if (urlRegex.test(text)) {
-      // Si text coincide con URL, creamos un <a> clickeable
       const link = document.createElement('a');
       link.href = text;
       link.textContent = text;
-      link.target = "_blank";           // abre en nueva pestaña
-      link.rel = "noopener noreferrer"; // buenas prácticas de seguridad
-      link.style.color = "#1DB954";     // opcional: color similar a tu diseño
+      link.target = "_blank";           
+      link.rel = "noopener noreferrer";
+      link.style.color = "#1DB954";
       link.style.textDecoration = "underline";
       msg.appendChild(link);
     } else {
-      // Si no es URL, lo mostramos como texto puro
       msg.textContent = text;
     }
-    
-    // msg.textContent = text;
     chat.appendChild(msg);
 
     if (sender === 'user' && Array.isArray(emotions) && emotions.length) {
@@ -407,7 +400,8 @@
     return;
   }
 
-  const { emotion, embedding } = await detectEmotion(userText);
+  const inputNumber = botResponses === 0 ? 1 : 2;
+  const { emotion, embedding } = await detectEmotion(userText, inputNumber);
   appendMessage(userText, 'user', Array.isArray(emotion) ? emotion : [emotion]);
   showTypingIndicator();
 
@@ -417,9 +411,9 @@
 
   let response;
 
-  // —————— Primera iteración ——————
+  // First input
   if (botResponses === 0) {
-    const { emotion, embedding } = await detectEmotion(userText, 1);
+    // const { emotion, embedding } = await detectEmotion(userText, 1);
     firstUserMessage   = userText;
     emotionDetected1   = emotion;
     emotionEmbedding1  = embedding;
@@ -427,11 +421,10 @@
     response         = await callLLMReflect(userText);
     firstBotResponse = response;
 
-    // **Desplegar YA la respuesta** (quitamos “thinking”)
     removeTypingIndicator();
     appendMessage(response, 'bot');
 
-    // Preparamos para segunda iteración
+
     botResponses++;
     sendButton.disabled = false;
     input.disabled      = false;
@@ -439,7 +432,7 @@
     return;
   }
 
-   // —————— Segunda iteración ——————
+  // Second input
 
   secondUserMessage   = userText;
   emotionDetected2    = emotion;
@@ -493,11 +486,11 @@
     updateLoginMenu();
   }
 
-  // —————— Llamadas al backend ——————
+  // Backend API calls
   async function detectEmotion(msg, inputNumber=2) {
     const res = await fetch('http://localhost:5000/api/emotion', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ message: msg, input_number: inputNumber})  //se pasa inputNumber para saber qué prompt es
+      body: JSON.stringify({ message: msg, input_number: inputNumber})
     });
     const { emotion, embedding } = await res.json();
     return { emotion, embedding };
@@ -517,7 +510,7 @@
     return (await res.json());
   }
 
-  // —————— Inicialización ——————
+  // Initial setup
   window.onload = () => {
     updateProfileIcon();
     updateLoginMenu();
@@ -530,7 +523,7 @@
 
   window.login = async () => {
     if (!loginAllowed) {
-      alert("❌ Login sólo antes de iniciar la conversación.");
+      alert("Login sólo antes de iniciar la conversación.");
       return;
     }
     genres = await login();
@@ -540,7 +533,7 @@
 
   window.logout = () => {
     if (!loginAllowed) {
-      alert("❌ Logout sólo antes de iniciar la conversación.");
+      alert("Logout sólo antes de iniciar la conversación.");
       return;
     }
     localStorage.removeItem("spotify_profile_img");
@@ -551,7 +544,6 @@
     alert("Sesión cerrada correctamente.");
   };
 
-  // Captura de código OAuth al cargar la página
   window.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     if (params.has("code")) {

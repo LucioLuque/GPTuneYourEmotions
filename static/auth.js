@@ -1,7 +1,4 @@
 const clientId = 'bdbf0e0e3bf24066aa88ad22c5841cf7';
-// const redirectUri = 'http://127.0.0.1:5500/GPTuneYourEmotions.html';
-// const redirectUri = 'http://127.0.0.1:5000/';
-// const redirectUri = 'http://127.0.0.1:5500/GPTuneYourEmotions.html';
 const redirectUri = 'http://127.0.0.1:5500/web/GPTuneYourEmotions.html';
 
 const generateRandomString = (length) => {
@@ -34,13 +31,12 @@ export async function login() {
 
     localStorage.setItem('code_verifier', codeVerifier);
 
-    // const scope = 'user-read-private user-read-email user-top-read';
     const scope = [
     'user-read-private',
     'user-read-email',
     'user-top-read',
-    'playlist-modify-private',   // para poder crear/editar playlists privadas
-    'playlist-modify-public'     // para poder crear/editar playlists públicas
+    'playlist-modify-private',
+    'playlist-modify-public'
     ].join(' ');
     const authUrl = new URL("https://accounts.spotify.com/authorize");
     authUrl.search = new URLSearchParams({
@@ -72,13 +68,13 @@ export async function login() {
 
   if (!tokenRes.ok) {
     const errText = await tokenRes.text();
-    console.error('💥 /api/token error:', tokenRes.status, errText);
+    console.error('/api/token error:', tokenRes.status, errText);
     throw new Error(`Token exchange failed: ${tokenRes.status}`);
   }
   const tokenData = await tokenRes.json();
   const accessToken = tokenData.access_token;
   if (!accessToken) {
-    console.error('🚫 No recibí access_token:', tokenData);
+    console.error('No recibí access_token:', tokenData);
     throw new Error('No se obtuvo access_token del servidor de Spotify.');
   }
 
@@ -88,7 +84,7 @@ export async function login() {
 
   if (!userProfileRes.ok) {
     const errText = await userProfileRes.text();
-    console.error('💥 /v1/me error:', userProfileRes.status, errText);
+    console.error('/v1/me error:', userProfileRes.status, errText);
     throw new Error(`Spotify /me failed: ${userProfileRes.status}`);
   }
   const userProfile = await userProfileRes.json();

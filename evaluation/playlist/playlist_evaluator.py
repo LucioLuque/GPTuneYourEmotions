@@ -4,7 +4,8 @@ import csv
 import pandas as pd
 from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
-from emotions import detect_user_emotions, get_playlist_ids2_weighted
+from emotions import detect_user_emotions
+from selection import get_playlist_ids_weighted
 from context import get_context_embedding 
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -23,7 +24,6 @@ AZURE_KEY      = os.environ["AZURE_OPENAI_API_KEY"]
 DEPLOY_GPT4    = os.environ["AZURE_GPT4_DEPLOYMENT"]
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
 
 PROMPT_FILE = PROJECT_ROOT / "evaluation" / "playlist" / "eval_prompt.txt"
 
@@ -86,7 +86,6 @@ async def score_playlist(p1: str, p2: str, track_ids: List[str]) -> dict:
     return json.loads(rsp.choices[0].message.content)
 
 
-
 async def batch_run(csv_path: str, output_dir="output_results"):
     """
     Processes prompts from a CSV file and generates playlists for each combination of weights.
@@ -118,7 +117,7 @@ async def batch_run(csv_path: str, output_dir="output_results"):
             context_embedding_2 = get_context_embedding(p2)
 
     
-            track_ids = get_playlist_ids2_weighted( emb1, emb2, context_embedding_1, context_embedding_2,
+            track_ids = get_playlist_ids_weighted( emb1, emb2, context_embedding_1, context_embedding_2,
                 genres=[], k=7, selection='best', n=1, weight_emotion=emotion_weight, 
                 weight_context=context_weight)[:N_TRACKS_MAX]
 
@@ -131,15 +130,12 @@ async def batch_run(csv_path: str, output_dir="output_results"):
                 "overall": result["overall"],
                 "rationale": result["rationale"]
             })
-            print(f"✓ {p1[:35]}… → {result['overall']}")
+            print(f"{p1[:35]}… → {result['overall']}")
 
         # Save results to CSV
         filename = f"weights_{emotion_weight}_{context_weight}.csv"
         output_path = os.path.join(output_dir, filename)
         pd.DataFrame(outputs).to_csv(output_path, index=False)
-        print(f"✓ Saved {output_path}")
-
-
 
 if __name__ == "__main__":
     import argparse
@@ -151,5 +147,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     asyncio.run(batch_run(args.batch, args.out))
-
-

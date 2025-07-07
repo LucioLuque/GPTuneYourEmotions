@@ -5,13 +5,14 @@ from transformers import AutoTokenizer, AutoModel
 import numpy as np
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
+from typing import List, Tuple
 
 import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join("../..", "emotions")))
-from emotions import detect_user_emotions, emotions_labels, emotional_data_embeddings,contextual_data_embeddings, df, data_ids
-
+from emotions import detect_user_emotions, emotions_labels, emotional_data_embeddings, dataset, data_ids
+from context.context import contextual_data_embeddings
 
 def predict_one(text: str) -> str:
     """
@@ -79,7 +80,7 @@ def load_similarity_matrix(path: str = "emotion_similarity.npy") -> np.ndarray:
     np.save(path, S)
     return S
 
-def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, save=True):
+def plot_confusion(cm: np.ndarray, labels: List[str], title: str, fname: str, vmax: float = 1.0, save: bool = True) -> None:
     """
     Plots and saves a confusion matrix as a heatmap.
     --------
@@ -93,7 +94,6 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, sav
     Returns:
         None
     """
-
     plt.figure(figsize=(11, 9))
     sns.heatmap(cm, annot=False, fmt=".2f", cmap="Greens", vmax=vmax,
                 xticklabels=labels, yticklabels=labels)
@@ -107,9 +107,8 @@ def plot_confusion(cm: np.ndarray, labels, title: str, fname: str, vmax=1.0, sav
         plt.savefig(fname, dpi=300)
     plt.show()
     plt.close()
-    
 
-def align_predictions_with_labels(pred, real):
+def align_predictions_with_labels(pred: list, real: list) -> Tuple[list, list]:
     """
     Aligns predicted emotions with real emotions such that matching emotions are at the same index.
     If both predictions exactly match the real labels, the original order is preserved.
@@ -125,21 +124,20 @@ def align_predictions_with_labels(pred, real):
         - Matching emotions are placed at the same index.
         - Remaining emotions are assigned to the next available indices.
     """
-    # Si ambas predicciones coinciden exactamente con las etiquetas reales, mantener el orden
+    # If both predictions exactly match the real labels, keep the order
     if set(pred) == set(real):
         return sorted(pred), sorted(real)
-
-    # Reordenar para que las emociones coincidentes estén en el mismo índice
+ 
     aligned_pred = [None, None]
     aligned_real = [None, None]
 
-    # Asignar las emociones coincidentes al mismo índice
+    # Align matching emotions
     for i, emotion in enumerate(real):
         if emotion in pred:
             aligned_pred[i] = emotion
             aligned_real[i] = emotion
 
-    # Asignar las emociones restantes
+    # Find remaining predictions and real emotions
     remaining_pred = [p for p in pred if p not in aligned_pred]
     remaining_real = [r for r in real if r not in aligned_real]
 
@@ -151,15 +149,15 @@ def align_predictions_with_labels(pred, real):
 
     return aligned_pred, aligned_real
 
-def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray, weight_emotion = 0.4, weight_context = 0.6) -> str:
+def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray, weight_emotion = 0.5, weight_context = 0.5) -> str:
     """
     Retrieves the lyrics of the song that best matches the given emotional and contextual embeddings.
     --------
     Args:
         emotional_embedding (np.ndarray): Emotional embedding vector.
         contextual_embedding (np.ndarray): Contextual embedding vector.
-        weight_emotion (float): Weight for emotional similarity (default: 0.4).
-        weight_context (float): Weight for contextual similarity (default: 0.6).
+        weight_emotion (float): Weight for emotional similarity (default: 0.5).
+        weight_context (float): Weight for contextual similarity (default: 0.5).
     --------
     Returns:
         str: Lyrics of the best matching song.
@@ -168,7 +166,6 @@ def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray
         - Combines emotional and contextual similarities using weighted cosine similarity.
         - Selects the song with the highest combined similarity score.
     """
-
     if not isinstance(emotional_embedding, np.ndarray):
         emotional_embedding = np.array(emotional_embedding)
     if emotional_embedding.ndim == 1:
@@ -183,8 +180,8 @@ def get_lyrics(emotional_embedding: np.ndarray, contextual_embedding: np.ndarray
     contextual_similarities = cosine_similarity(contextual_embedding, contextual_data_embeddings)[0]
 
     combined_similarities = (weight_emotion * emotion_similarities) + (weight_context * contextual_similarities)
-    # Get the index of the best matching song
+
     best_idx = np.argmax(combined_similarities)
     best_id = data_ids[best_idx]
-    lyrics = df.loc[df["id"] == best_id, "lyrics"].iat[0]
+    lyrics = dataset.loc[dataset["id"] == best_id, "lyrics"].iat[0]
     return lyrics

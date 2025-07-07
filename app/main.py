@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from app.backend_factory import generate_reflection, generate_recommendation
 from chatbots.GPT4omini import generate_translation, rewrite_as_emotion_statement
-from emotions.emotions import detect_user_emotions, get_playlist_ids2_weighted
+from emotions.emotions import detect_user_emotions
 from context.context import get_context_embedding 
+from selection.select_songs import get_playlist_ids_weighted
 from urllib import request as urllib_request
 import json
 import asyncio
 import os
+from typing import List
 
 BACKEND = os.getenv("BOT_BACKEND", "flan").lower()
 
@@ -19,8 +21,15 @@ CORS(app)
 
 def spotify_api_get(url: str, access_token: str) -> dict:
     """
-    Hace un GET a la API de Spotify (p.ej. /v1/me), usando urllib.
-    Retorna el JSON decodificado como dict. Lanza excepción si falló.
+    Does a GET request to the Spotify API (e.g. /v1/me),
+    using urllib. Returns the decoded JSON as a dict.
+    --------
+    Args:
+        url (str): The Spotify API endpoint URL.
+        access_token (str): The OAuth access token for authentication.
+    --------
+    Returns:
+        dict: The JSON response from the Spotify API, parsed as a dictionary.
     """
     req = urllib_request.Request(url)
     req.add_header("Authorization", f"Bearer {access_token}")
@@ -33,8 +42,17 @@ def spotify_api_get(url: str, access_token: str) -> dict:
 
 def spotify_api_post(url: str, access_token: str, body_dict: dict) -> dict:
     """
-    Hace un POST a la API de Spotify con un cuerpo JSON (body_dict) usando urllib.
-    Retorna el JSON decodificado como dict. Lanza excepción si no es 200/201.
+    Does a POST to the Spotify API (e.g. /v1/users/{user_id}/playlists),
+    using urllib. The body_dict is converted to JSON and sent as the request body.
+    Returns the JSON response as a dict. Raises an exception if the request fails.
+    --------
+    Args:
+        url (str): The Spotify API endpoint URL.
+        access_token (str): The OAuth access token for authentication.
+        body_dict (dict): The body of the POST request, to be sent as JSON.
+    --------
+    Returns:
+        dict: The JSON response from the Spotify API, parsed as a dictionary.
     """
     body_bytes = json.dumps(body_dict).encode("utf-8")
     req = urllib_request.Request(url, data=body_bytes, method="POST")
@@ -46,8 +64,19 @@ def spotify_api_post(url: str, access_token: str, body_dict: dict) -> dict:
             raise Exception(f"Spotify POST {url} falló: {resp.status} / {body}")
         data = resp.read().decode("utf-8")
         return json.loads(data)
-    
-def get_playlist_link(spotify_token, song_list):
+
+def get_playlist_link(spotify_token: str, song_list: List[str]) -> List[str]:
+    """
+    Creates a Spotify playlist with the given song IDs and returns the playlist URL.
+    If no Spotify token is provided, returns the URLs of the individual tracks instead.
+    --------
+    Args:
+        spotify_token (str): The OAuth access token for Spotify API.
+        song_list (List[str]): List of Spotify track IDs to include in the playlist.
+    --------
+    Returns:
+        List[str]: A list containing the URL of the created playlist or individual track URLs.
+    """
     if not spotify_token:
         return [f"https://open.spotify.com/track/{tid}" for tid in song_list]
     
@@ -56,7 +85,7 @@ def get_playlist_link(spotify_token, song_list):
     if not user_id:
         raise Exception("No se obtuvo user_id de Spotify.")
 
-    # Crear la playlist (privada)
+    # Creates a playlist
     create_body = {
         "name": "GPTune Your Emotions Playlist",
         "description": "Playlist generada automáticamente por GPTune Your Emotions",
@@ -69,13 +98,13 @@ def get_playlist_link(spotify_token, song_list):
     if not playlist_id:
         raise Exception("No se obtuvo playlist_id al crearla.")
 
-    # Agregar tracks
+    # Adds tracks
     uris = [f"spotify:track:{tid}" for tid in song_list]
     add_body = {"uris": uris}
     add_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
     spotify_api_post(add_url, spotify_token, add_body)
 
-    # Construir el URL final:
+    # Builds the final URL:
     playlist_url = f"https://open.spotify.com/playlist/{playlist_id}"
     return [playlist_url]
 
@@ -84,35 +113,21 @@ def detect_emotion():
     try:
         data = request.get_json(force=True)
         message = data.get("message", "")
-        input_number = data.get("input_number", 1)  # nuevo parámetro para saber si es input 1 o 2
-        print(f"Input number: {input_number}")
-        # Selección de procesamiento según el tipo de input
+        input_number = data.get("input_number", 1)  # Input 1 or 2
+        print(f"Original message (turn {input_number}): {message}")
+
         if BACKEND == "gpt4o-mini":
-            # if input_number == 2:
-            #     translated_message = asyncio.run(rewrite_as_emotion_statement(message))
-            #     print(f"Original message (turn 2): {message}")
-            #     print(f"Reformulated message (turn 2): {translated_message}")
-            # else:
-            #     translated_message = asyncio.run(generate_translation(message))
-            #     print(f"Original message (turn 1): {message}")
-            #     print(f"Translated message (turn 1): {translated_message}")
-            translated_message = asyncio.run(generate_translation(message))
-            print(f"Original message (turn 1): {message}")
-            print(f"Translated message (turn 1): {translated_message}")
+            translated_message = asyncio.run(generate_translation(message)) # Translate the message
+            print(f"Translated message (turn {input_number}): {translated_message}")
             if input_number == 2:
                 message2=translated_message
-                translated_message = asyncio.run(rewrite_as_emotion_statement(message2))
-                print(f"Original message (turn 2): {message2}")
-                print(f"Reformulated message (turn 2): {translated_message}")
-
+                translated_message = asyncio.run(rewrite_as_emotion_statement(message2)) # Reformulate the message
+                print(f"Reformulated message (turn {input_number}): {translated_message}")
         else:
             translated_message = message
 
-        # Detectar emociones (hasta 4 para tener backup si hay 'desire')
         emotional_embedding, emotions = detect_user_emotions(translated_message, n=3)
 
-
-        # Convertir embedding a lista
         if hasattr(emotional_embedding, "tolist"):
             embedding_list = emotional_embedding.tolist()
         else:
@@ -130,7 +145,6 @@ def detect_emotion():
             "embedding": [],
             "error": str(e)
         }), 200
-
 
 @app.route('/api/reflect', methods=['POST'])
 def reflect():
@@ -157,37 +171,24 @@ def recommend():
         emotional_embedding_2          = data.get("emotional_embedding_2", [])
         emo1         = data.get("emotion_detected_1", "")
         emo2         = data.get("emotion_detected_2", "")
-        genres        = data.get("genres", [])
+        genres        = data.get("genres", []) # not being used because the dataset does not have genres, but kept for future use
         spotify_token = data.get("spotify_token")
-        print(f"top genres: {genres}")
-
 
         if BACKEND == "gpt4o-mini":
             reformulated_ui2 = asyncio.run(rewrite_as_emotion_statement(ui2))
-            print(f"Orginal user input 2: {ui2}")
-            print(f"Reformulated user input 2: {reformulated_ui2}")
         else:
             reformulated_ui2 = ui2
-
-
-        emotional_embedding_2, emotions_2 = detect_user_emotions(reformulated_ui2, n=3)
-            
-        emo2 = emotions_2[0] if emotions_2 else "neutral"  #Lo de antes
-
         
-        context_embedding_1 = get_context_embedding(ui1) #aca no estamos usando el translated que es como sacamos el embedding emocional!
-        context_embedding_2 = get_context_embedding(reformulated_ui2) 
+        context_embedding_1 = get_context_embedding(ui1)
+        context_embedding_2 = get_context_embedding(reformulated_ui2)
 
-
-        songs_ids = get_playlist_ids2_weighted(emotional_embedding_1, emotional_embedding_2,
-                                                context_embedding_1, context_embedding_2,  genres,
-                                                weight_emotion=0.4, weight_context=0.6,
-                                               k=5, selection='best', n=1)
-
-    
+        songs_ids = get_playlist_ids_weighted(emotional_embedding_1, emotional_embedding_2,
+                                            context_embedding_1, context_embedding_2,
+                                            weight_emotion=0.5, weight_context=0.5,
+                                            k=7, selection='best', n=1)
     
         urls = get_playlist_link(spotify_token, songs_ids)
-        response      = generate_recommendation(ui1, ui2, br1, emo1, emo2, song="")
+        response = generate_recommendation(ui1, ui2, br1, emo1, emo2)
         return jsonify({
             "response": response,
             "urls": urls

@@ -1,19 +1,16 @@
-# Ignorar archivos CSV
+# Ignore .npy and .csv files
 *.csv
-
-!evaluation/sentiment/eval_prompts.csv
-!evaluation/sentiment/lyrics_sample.csv
-!evaluation/sentiment/eval_lyrics_labels.csv
-!evaluation/songs/songs_results/*.csv
-!evaluation/playlist/output_results/weights_wemo0.5_wctx0.5.csv
-!evaluation/playlist/output_results/weights_wemo0.25_wctx0.75.csv
-!evaluation/playlist/output_results/weights_wemo0.75_wctx0.25.csv
-!evaluation/playlist/test_prompts.csv
-
-# Ignorar archivos NPY (NumPy)
 *.npy
 
-# Ignorar credenciales de Windows
-credentials.bat
+!evaluation/sentiment/sentiment_results/*.csv
+!evaluation/sentiment/*.npy
+!evaluation/sentiment/*.csv
+!evaluation/songs/songs_results/*.csv
+!evaluation/playlist/output_results/*.csv
+!evaluation/playlist/*.csv
+!data/first_1000_emotional_embeddings.npy
+!data/first_1000_context_embeddings.npy
+!data/first_1000_dataset.csv
 
+# Ignore credentials file
 credentials.env

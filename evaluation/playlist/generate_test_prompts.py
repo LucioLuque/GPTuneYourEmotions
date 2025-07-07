@@ -68,9 +68,6 @@ def main():
         writer = csv.writer(f)
         writer.writerow(["prompt_1", "prompt_2", "emo_1", "emo_2"])
         writer.writerows(make_pairs())
-    print(f"✓ Saved {out.absolute()}")
-
-
 
 if __name__ == "__main__":
     main()
